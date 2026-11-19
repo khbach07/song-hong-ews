@@ -1,0 +1,14 @@
+# Dữ liệu gốc & file trung gian lớn: KHÔNG đẩy lên GitHub
+data/raw/*
+data/interim/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+outputs/*.csv
+!outputs/coef.csv
+!outputs/thresholds.csv
+*.zip
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+~$*.xlsx
