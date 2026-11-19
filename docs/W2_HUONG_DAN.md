@@ -62,19 +62,19 @@ income thiếu 8,7%, work_months thiếu 8,8% → **rủi ro hơn hẳn** (> 1,5
 
 | Quy tắc                                                                                  | Số vi phạm    | Xử lý                                                             |
 | ---------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------- |
-| R01 tuổi < 18 hoặc > 75                                                                  | 61 + 61 = 122 | kẹp về nhóm biên gần nhất [18, 75] + cờ `f_age_invalid`           |
-| R02 income > 500                                                                         | 76            | chặn trên (cap) ở 500 + cờ `f_income_outlier`                     |
-| R03 DTI > 200                                                                            | 18            | giữ nguyên giá trị thực tế + cờ `f_dti_outlier` (`cap_dti=False`) |
+| R01 tuổi < 18 hoặc > 75                                                                  | 61 + 61 = 122 | kẹp về biên gần nhất `[18, 75]` + cờ `f_age_invalid`              |
+| R02 income > 500                                                                         | 76            | chia 100 + cờ `f_income_outlier`                                  |
+| R03 DTI > 200                                                                            | 18            | giữ nguyên giá trị thực tế (`cap_dti=False`) + cờ `f_dti_outlier` |
 | R04 card_util > 100                                                                      | 1.734         | giữ giá trị + cờ `f_card_over100`                                 |
 | R05–R08 (work_months/cic_hist vs tuổi; dpd_cnt_6m ≤ dpd_cnt_12m; dpd_cnt_12m ≤ cic_hist) | 0             | không vi phạm                                                     |
 
-**Lý do chốt quy tắc xử lý ngoại lai:**
+**Giải thích quy tắc xử lý ngoại lai đã chốt:**
 
-- **Tuổi ngoài [18, 75]:** Kẹp về nhóm tuổi hợp lệ gần nhất (`< 18` đưa về `18`, `> 75` đưa về `75`) thay vì xóa thành trống để giữ trọn số lượng quan sát khi ghép mô hình, đồng thời bật cờ `f_age_invalid = 1`.
-- **Thu nhập > 500 triệu:** Chặn trên (cap) ở mức `500` triệu và bật cờ `f_income_outlier = 1` để giảm tác động của các giá trị cực đoan mà vẫn giữ được tín hiệu khách hàng có thu nhập cao.
-- **DTI > 200%:** Giữ nguyên giá trị thực tế (`cap_dti=False`) và bật cờ `f_dti_outlier = 1` vì khách hàng có tỷ lệ nghĩa vụ nợ cao bất thường có thể phát sinh thực tế và mang tín hiệu rủi ro quan trọng.
+- **Income > 500 (76 dòng):** Chia 100 (`_fix_income`) và gắn cờ `f_income_outlier = 1`. Dữ liệu thực tế cho thấy các giá trị gốc nằm trong khoảng `600–2.470` triệu; sau khi chia 100 về `6–25` triệu (trung vị `15,0` triệu), hoàn toàn khớp với mặt bằng thu nhập toàn danh mục (`14,0` triệu), quy mô khoản vay trung vị (`70,5` triệu) và DTI trung vị (`39,5%`), tránh làm lệch điểm chuẩn hóa `z` khi W5 huấn luyện Logistic Regression.
+- **Tuổi < 18 hoặc > 75 (122 dòng):** Kẹp về biên hợp lệ gần nhất `[18, 75]` (`clip(18, 75)`) và gắn cờ `f_age_invalid = 1` để giữ trọn quan sát khi ghép mô hình.
+- **DTI > 200% (18 dòng):** Giữ nguyên giá trị thực tế (`cap_dti=False`) và gắn cờ `f_dti_outlier = 1` vì tỷ lệ nghĩa vụ nợ/thu nhập cao bất thường có thể phát sinh thật và mang tín hiệu rủi ro quan trọng.
 
-Lưu ý: số trong `data_dictionary.csv` (122 tuổi, 76 thu nhập, 29 DTI, 2.139 card_util) được đếm trên các phạm vi khác nhau nên không khớp hoàn toàn. Hãy dùng số đếm trực tiếp trên tập EWS (như bảng trên) và nói rõ phạm vi khi báo cáo.
+Lưu ý: số trong `data_dictionary.csv` (122 tuổi, 76 income, 29 DTI, 2.139 card_util) được đếm trên các phạm vi khác nhau nên không khớp hoàn toàn. Hãy dùng số đếm trực tiếp trên tập EWS (như bảng trên) và nói rõ phạm vi khi báo cáo.
 
 ### 4.3 Drift thu nhập (Drift_Income)
 
@@ -90,24 +90,24 @@ Lưu ý: W3 vẫn cần `perf_class` / `exclusion_reason` để xác định ph�
 
 `fit_medians(train)` + `impute_median(df, medians)`: trung vị tính **chỉ trên Dev** rồi áp cho OOT, để không rò rỉ thông tin từ OOT. Cờ `f_*_missing` vẫn giữ để mô hình biết giá trị này vốn bị thiếu.
 
-## 5. Đưa kết quả vào Workbook / Google Sheets của nhóm
+## 5. Đưa kết quả vào Excel / Google Sheets của nhóm
 
-- Sheet `02_Customer_Profile`: đã có công thức làm sạch (kẹp tuổi `[18, 75]`, chặn trên thu nhập `500`, giữ nguyên `DTI`) + đủ 8 cờ `f_*`, tự động cập nhật khi `01_Raw_Data` thay đổi tháng snapshot.
-- Sheet `DQ_Report`: đã điền đầy đủ kết quả Mục A (Missing), Mục B (Outlier), Mục C (Drift 18 tháng) và Mục D (Chính sách chống leakage) khớp với `THRESH` trong `clean_rules.py`.
+- Sheet `02_Customer_Profile`: đã cập nhật công thức động liên kết từ `01_Raw_Data` theo đúng quy tắc W2 chốt (kẹp tuổi `[18, 75]`, sửa lỗi đơn vị `income_mil > 500` chia 100, giữ nguyên `dti_pct`, sinh đủ 8 cờ `f_*` + `dq_flag_count`).
+- Sheet `DQ_Report`: đã điền hoàn chỉnh cả 4 mục (A. Missing, B. Outlier, C. Drift 18 tháng, D. Chính sách biến chống leakage) khớp số liệu thực tế trên 58.871 hồ sơ.
 - Sheet `Feature_Dict`: đã xác nhận **"Đồng ý"** cho các biến hồ sơ tĩnh để W4 sử dụng.
 
 ## 6. Việc cần báo nhóm / dễ bị hỏi khi bảo vệ
 
 1. Vì sao không điền 0 cho giá trị thiếu? (thiếu có nghĩa nghiệp vụ; Q2c cho thấy nhóm thiếu income/work_months rủi ro hơn.)
-2. Income > 500, tuổi ngoài [18, 75] và DTI > 200 xử lý ra sao và vì sao? (Income chặn trên 500 và tuổi kẹp về biên gần nhất `[18, 75]` để giảm nhiễu ngoại lai mà không mất dòng; DTI > 200 giữ nguyên vì có thể xảy ra thực tế – tất cả đều gắn cờ `f_*`.)
+2. Income > 500, tuổi ngoài [18, 75] và DTI > 200 xử lý ra sao và vì sao? (Income > 500 chia 100 để sửa lỗi đơn vị và giữ đúng phân phối chuẩn hóa cho mô hình tuyến tính; tuổi kẹp về biên gần nhất [18, 75] để giữ trọn quan sát; DTI > 200 giữ nguyên giá trị thực tế — tất cả đều gắn cờ `f_*` tương ứng.)
 3. Drift 07/2023 ảnh hưởng gì? (thu nhập tăng ~25% do đổi biểu mẫu, không phải khách giàu lên – nên cẩn thận khi dùng income làm feature và khi chia Dev/OOT theo thời gian.)
 4. Vì sao loại `gender`, `curr_max_cic_group`...? (leakage/nhạy cảm theo quy ước nhóm.)
-5. 129 khoản SH24 trong perf_monthly không có hồ sơ (đều là khoản đã cơ cấu `Indeterminate`, không nằm trong OOT) – `load_profile()` đã loại khỏi tập hồ sơ sạch (còn 58.871 dòng).
+5. 129 khoản SH24 trong perf_monthly không có hồ sơ (đều là khoản đã cơ cấu Indeterminate, không nằm trong OOT) – đã thống nhất loại bỏ trong `load_profile()` (chỉ giữ 58.871 hồ sơ có đầy đủ thông tin).
 
 ## 7. Checklist W2
 
-- [x] Chạy `python -m ews.dq_report` kiểm thử toàn bộ dữ liệu thật
-- [x] Chốt các quy tắc trong `THRESH` và `clean_profile` (`clean_rules.py`)
-- [x] Đồng bộ mô tả quy tắc mới trong `dq_report.py` và `W2_HUONG_DAN.md`
-- [x] Hoàn thiện `DQ_Report`, `02_Customer_Profile` và xác nhận biến ở `Feature_Dict`
-- [x] Báo W4/W5 cách gọi `load_clean_profile()` / `model_ready()`
+- [x] Chạy `python -m ews.dq_report` và kiểm tra dữ liệu đầu ra
+- [x] Chốt quy tắc trong `THRESH` và `clean_profile` (income > 500 chia 100, clip tuổi 18–75, giữ nguyên DTI)
+- [x] Xác nhận xử lý drift (gắn cờ `income_period`) và loại 129 khoản SH24 thiếu hồ sơ
+- [x] Hoàn thiện sheet `02_Customer_Profile`, `DQ_Report` và xác nhận biến hồ sơ trên `Feature_Dict`
+- [x] Đẩy code lên GitHub và bàn giao hàm `load_clean_profile()` / `model_ready()` cho W4, W5
