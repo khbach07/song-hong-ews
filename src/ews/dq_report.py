@@ -25,10 +25,10 @@ COL = {c: L(i + 1) for i, c in enumerate(DATA_COLS)}
 
 TREAT = {  # hướng xử lý từng biến (đã chốt – xem docs/W2_HUONG_DAN.md)
     "loan_amount_mil": "Không thiếu, không ngoại lai. Giữ nguyên.",
-    "age": "Ngoài [18, 75] là lỗi nhập liệu: đặt trống + cờ f_age_invalid.",
-    "income_mil": "Thiếu ~4,5%: giữ trống + cờ f_income_missing (nhóm thiếu rủi ro hơn hẳn). > 500 là lỗi đơn vị: chia 100 + cờ f_income_outlier. Có drift từ 07/2023.",
+    "age": "Ngoài [18, 75] là lỗi nhập liệu: kẹp về nhóm biên gần nhất [18, 75] + cờ f_age_invalid.",
+    "income_mil": "Thiếu ~4,5%: giữ trống + cờ f_income_missing (nhóm thiếu rủi ro hơn hẳn). > 500 là ngoại lai: chặn trên (cap) ở 500 + cờ f_income_outlier. Có drift từ 07/2023.",
     "work_months": "Thiếu ~10,7%: giữ trống + cờ f_work_missing (nhóm thiếu rủi ro hơn hẳn). Không vi phạm (age−18)×12.",
-    "dti_pct": "> 200% cực đoan nhưng có thể xảy ra: chặn trên ở 200 + cờ f_dti_outlier.",
+    "dti_pct": "> 200% cực đoan nhưng có thể xảy ra: giữ nguyên giá trị thực tế + cờ f_dti_outlier.",
     "cic_hist_months": "Không cần xử lý riêng (binning/chuẩn hóa xử lý đuôi).",
     "num_lenders": "Không cần xử lý riêng.",
     "card_util_pct": "Thiếu ~30% = không có thẻ (có ý nghĩa nghiệp vụ): giữ trống + cờ f_card_missing. > 100% = vượt hạn mức: giữ giá trị + cờ f_card_over100.",
@@ -134,10 +134,10 @@ def build(df: pd.DataFrame, path):
     hdr(ws, 4, ["Quy tắc", "Biến", "Điều kiện bất thường", "Ngưỡng", "Số vi phạm", "% vi phạm", "Cách xử lý", "Hàm / cờ trong clean_rules.py"])
     a, inc, dti, cu, wm, cic, d6, d12 = (R(x) for x in ["age", "income_mil", "dti_pct", "card_util_pct", "work_months", "cic_hist_months", "dpd_cnt_6m", "dpd_cnt_12m"])
     rules = [
-        ("R01a", "age", "age < ngưỡng", 18, lambda t: f'=COUNTIFS({a},"<"&D{t})', "Lỗi nhập liệu → đặt trống + cờ", "clean_profile → f_age_invalid"),
-        ("R01b", "age", "age > ngưỡng", 75, lambda t: f'=COUNTIFS({a},">"&D{t})', "Lỗi nhập liệu → đặt trống + cờ", "clean_profile → f_age_invalid"),
-        ("R02", "income_mil", "income_mil > ngưỡng (triệu)", 500, lambda t: f'=COUNTIFS({inc},">"&D{t})', "Lỗi đơn vị → chia 100 + cờ (giá trị sau sửa 5–29 triệu, khớp mặt bằng thu nhập)", "_fix_income → f_income_outlier"),
-        ("R03", "dti_pct", "dti_pct > ngưỡng (%)", 200, lambda t: f'=COUNTIFS({dti},">"&D{t})', "Cực đoan nhưng có thể xảy ra → chặn trên + cờ", "clean_profile(cap_dti) → f_dti_outlier"),
+        ("R01a", "age", "age < ngưỡng", 18, lambda t: f'=COUNTIFS({a},"<"&D{t})', "Lỗi nhập liệu → kẹp về nhóm biên gần nhất (18) + cờ", "clean_profile → f_age_invalid"),
+        ("R01b", "age", "age > ngưỡng", 75, lambda t: f'=COUNTIFS({a},">"&D{t})', "Lỗi nhập liệu → kẹp về nhóm biên gần nhất (75) + cờ", "clean_profile → f_age_invalid"),
+        ("R02", "income_mil", "income_mil > ngưỡng (triệu)", 500, lambda t: f'=COUNTIFS({inc},">"&D{t})', "Ngoại lai cực lớn / lỗi đơn vị → chặn trên (cap) ở 500 + cờ", "_fix_income → f_income_outlier"),
+        ("R03", "dti_pct", "dti_pct > ngưỡng (%)", 200, lambda t: f'=COUNTIFS({dti},">"&D{t})', "Cực đoan nhưng có thể xảy ra → giữ nguyên giá trị + cờ (cap_dti=False)", "clean_profile → f_dti_outlier"),
         ("R04", "card_util_pct", "card_util_pct > ngưỡng (%)", 100, lambda t: f'=COUNTIFS({cu},">"&D{t})', "Vượt hạn mức, có thể có thật → giữ giá trị + cờ", "clean_profile → f_card_over100"),
         ("R05", "work_months", "work_months > (age−18)×12", "—", lambda t: f"=SUMPRODUCT(--({a}>=18),--({wm}>({a}-18)*12))", "Không vi phạm → không cần xử lý", "outlier_report"),
         ("R06", "cic_hist_months", "cic_hist_months > (age−18)×12", "—", lambda t: f"=SUMPRODUCT(--({a}>=18),--({cic}>({a}-18)*12))", "Không vi phạm → không cần xử lý", "outlier_report"),
@@ -158,7 +158,7 @@ def build(df: pd.DataFrame, path):
     ws = wb.create_sheet("Drift_Income")
     ws["A1"] = "Drift thu nhập theo tháng nộp hồ sơ"; ws["A1"].font = F(bold=True, size=14)
     ws["A2"] = ("Từ 01/07/2023 biểu mẫu LOS yêu cầu khai cả thu nhập khác → thu nhập khai báo tăng ~25% (trung vị 12 → 15 triệu). "
-                "Trung vị tính sau khi sửa lỗi đơn vị (giá trị > 500 chia 100); đây là giá trị Python (Excel thuần không có hàm trung vị theo nhóm).")
+                "Trung vị tính sau khi chặn trên (cap) thu nhập > 500 về 500; đây là giá trị Python (Excel thuần không có hàm trung vị theo nhóm).")
     ws["A2"].alignment = WRAP; ws.merge_cells("A2:F2"); ws.row_dimensions[2].height = 42
     hdr(ws, 4, ["Tháng (yyyymm)", "Số hồ sơ", "% thiếu income", "Trung vị income (triệu)", "Trước/Sau 07/2023"])
     dr = cr.drift_report(df)
@@ -187,9 +187,9 @@ def build(df: pd.DataFrame, path):
         ("Missing", "card_util_pct", "Thiếu 30%", "Giữ trống + cờ f_card_missing", "Thiếu nghĩa là không có thẻ (ý nghĩa nghiệp vụ)", "clean_profile"),
         ("Missing", "deposit_avg_3m_mil", "Thiếu 38%", "Giữ trống + cờ f_deposit_missing", "Thiếu nghĩa là chưa có tài khoản tiền gửi", "clean_profile"),
         ("Missing", "mọi biến số", "Cần điền khi huấn luyện", "Không thay bằng 0; điền trung vị fit trên Dev (tùy chọn) và vẫn giữ cờ", "Tránh rò rỉ từ OOT", "fit_medians, impute_median"),
-        ("Outlier", "age", "<18 hoặc >75 (122 dòng)", "Đặt trống + cờ f_age_invalid", "Lỗi nhập liệu", "clean_profile"),
-        ("Outlier", "income_mil", ">500 (76 dòng)", "Chia 100 + cờ f_income_outlier", "Sau chia 100 nằm 5–29 triệu, khớp mặt bằng; loan_amount và dti của nhóm này giống khách bình thường", "clean_profile"),
-        ("Outlier", "dti_pct", ">200 (18 dòng)", "Chặn trên 200 + cờ f_dti_outlier", "Cực đoan nhưng có thể xảy ra", "clean_profile"),
+        ("Outlier", "age", "<18 hoặc >75 (122 dòng)", "Kẹp về nhóm biên gần nhất [18, 75] + cờ f_age_invalid", "Lỗi nhập liệu, giữ lại quan sát và đưa về cận hợp lệ gần nhất", "clean_profile"),
+        ("Outlier", "income_mil", ">500 (76 dòng)", "Chặn trên (cap) ở 500 + cờ f_income_outlier", "Giảm tác động của giá trị ngoại lai cực lớn, giữ lại tín hiệu thu nhập cao", "clean_profile"),
+        ("Outlier", "dti_pct", ">200 (18 dòng)", "Giữ nguyên giá trị + cờ f_dti_outlier", "Cực đoan nhưng có thể xảy ra thực tế (mặc định cap_dti=False)", "clean_profile"),
         ("Outlier", "card_util_pct", ">100 (1.734 dòng)", "Giữ giá trị + cờ f_card_over100", "Chi tiêu vượt hạn mức có thể có thật", "clean_profile"),
         ("Drift", "income_mil", "Đứt gãy từ 07/2023 (+25%)", "Gắn income_period; KHÔNG hiệu chỉnh mặc định", "Hiệu chỉnh ×1,25 cho trước 07/2023 là tùy chọn, cần nhóm đồng ý (adjust_income_drift)", "clean_profile"),
         ("Leakage", ", ".join(C.LEAKAGE_COLS), "Kết quả/thông tin tương lai hoặc nhạy cảm", "LOẠI khỏi input mô hình", "Quy tắc chống data leakage của nhóm", "drop_leakage"),
