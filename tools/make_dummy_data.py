@@ -1,32 +1,44 @@
-"""Sinh dữ liệu GIẢ cùng cấu trúc để làm song song (không phải dữ liệu thật).
-Chạy từ thư mục gốc repo:  python tools/make_dummy_data.py
-Tạo: outputs/dummy_panel_target.csv, dummy_features.csv, dummy_scored.csv
-"""
+"""Create a small, explicitly synthetic W3/W4 teaching example."""
+import argparse
 import sys
 from pathlib import Path
-import numpy as np, pandas as pd
+
+import pandas as pd
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from ews import config as C
+from ews.artifacts import publication
+from ews.build_panel import make_targets, summarize_labels, wide_to_long
+from ews.config import DPD_COLS, INTERIM
+from ews.features import dpd_features
 
-rng = np.random.default_rng(0)
-n_loans = 500
-rows = [(f"SH23{i:06d}", m) for i in range(1, n_loans + 1) for m in range(C.MOB_MIN, C.MOB_MAX + 1)]
-df = pd.DataFrame(rows, columns=C.KEY)
-df["snap_date"] = pd.Timestamp("2023-06-01")
-df["Target_30_3M"] = (rng.random(len(df)) < 0.05).astype(int)
-df["Target_90_3M"] = (df["Target_30_3M"] & (rng.random(len(df)) < 0.5)).astype(int)
-df["label_status"] = "Labeled"
-C.OUT.mkdir(exist_ok=True)
-df[C.PANEL_COLS].to_csv(C.OUT / "dummy_panel_target.csv", index=False)
+CASES = [
+    ("CLEAN", [0, 0, 0, 0, 0, 0], None),
+    ("EVENT30", [0, 4, 12, 18, 35, 0], None),
+    ("EVENT90", [0, 0, 21, 38, 95, 0], None),
+    ("ALREADY30", [0, 15, 32, 15, 12, 3], None),
+    ("CLOSED", [0, 0, 0, 10], 4),
+    ("MISSING", [0, 0, 0, 0, None, 0], None),
+]
 
-feat = df[C.KEY].copy()
-feat["dpd_t"] = np.where(df["Target_30_3M"] == 1, rng.integers(1, 40, len(df)), 0)
-feat["dpd_avg_3m"] = feat["dpd_t"] * rng.random(len(df))
-feat["dpd_max_3m"] = feat["dpd_t"]
-feat["n_months_dpd_6m"] = rng.integers(0, 4, len(df))
-feat.to_csv(C.OUT / "dummy_features.csv", index=False)
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--out", type=Path, default=INTERIM / "example")
+    args = parser.parse_args()
+    perf = pd.DataFrame([
+        {"app_id": f"DEMO_{key}", "cohort": "Dev", "open_month": pd.Timestamp("2024-01-01"),
+         "close_mob": close, "restr_mob": float("nan"), "mob_observed": len(dpd),
+         **dict(zip(DPD_COLS, dpd + [None] * (len(DPD_COLS) - len(dpd))))}
+        for key, dpd, close in CASES
+    ])
+    history = wide_to_long(perf)
+    panel = make_targets(history)
+    with publication(args.out) as staging:
+        for name, frame in [
+            ("synthetic_performance", perf), ("panel_target", panel),
+            ("features", dpd_features(history)), ("label_summary", summarize_labels(panel)),
+        ]:
+            frame.to_csv(staging / f"{name}.csv", index=False, encoding="utf-8-sig")
+    print(args.out.resolve())
 
-scored = df[C.KEY].copy()
-scored["PD"] = np.clip(0.02 + 0.5 * df["Target_30_3M"] * rng.random(len(df)), 0, 1)
-scored.to_csv(C.OUT / "dummy_scored.csv", index=False)
-print("Đã tạo dữ liệu giả trong outputs/")
+if __name__ == "__main__":
+    main()
