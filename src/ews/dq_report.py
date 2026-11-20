@@ -1,10 +1,4 @@
-"""W2 – Tạo báo cáo Data Quality dạng Excel (theo mẫu Q02_Data_description.xlsx của cô) + file hồ sơ sạch.
-
-Chạy từ thư mục gốc repo:   python -m ews.dq_report      (cần PYTHONPATH=src, hoặc: cd src && python -m ews.dq_report)
-Đầu ra:
-  outputs/W2_Customer_Profile_DQ.xlsx   báo cáo; các bảng tổng hợp là CÔNG THỨC Excel (COUNTIFS, PERCENTILE...) trên sheet Data_Profile
-  data/interim/customer_profile_clean.csv   hồ sơ đã làm sạch + cờ chất lượng (cho W4/W5; không đẩy lên GitHub)
-"""
+"""W2 – Tạo báo cáo Data Quality dạng Excel (theo mẫu Q02_Data_description.xlsx của cô) + file hồ sơ sạch."""
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.chart import LineChart, Reference
@@ -23,7 +17,7 @@ WRAP = Alignment(wrap_text=True, vertical="top")
 DATA_COLS = ["app_id", "profile_source", "app_ym"] + cr.NUM_COLS + ["perf_class", "target"]
 COL = {c: L(i + 1) for i, c in enumerate(DATA_COLS)}
 
-TREAT = {  # hướng xử lý từng biến (đã chốt – xem docs/W2_HUONG_DAN.md)
+TREAT = {  
     "loan_amount_mil": "Không thiếu, không ngoại lai. Giữ nguyên.",
     "age": "Ngoài [18, 75] là lỗi nhập liệu: kẹp về biên gần nhất [18, 75] + cờ f_age_invalid.",
     "income_mil": "Thiếu ~4,5%: giữ trống + cờ f_income_missing (nhóm thiếu rủi ro hơn hẳn). > 500 là lỗi đơn vị: chia 100 + cờ f_income_outlier. Có drift từ 07/2023.",
@@ -38,14 +32,12 @@ TREAT = {  # hướng xử lý từng biến (đã chốt – xem docs/W2_HUONG_
     "deposit_avg_3m_mil": "Thiếu ~38% = chưa có tài khoản tiền gửi: giữ trống + cờ f_deposit_missing.",
 }
 
-
 def hdr(ws, row, labels, widths=None):
     for j, t in enumerate(labels):
         c = ws.cell(row=row, column=1 + j, value=t)
         c.font = F(bold=True, color="FFFFFF"); c.fill = BLUE; c.border = BD
         c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws.row_dimensions[row].height = 32
-
 
 def put(ws, r, c, v, fmt=None, bold=False, fill=None, wrap=False):
     x = ws.cell(row=r, column=c, value=v); x.font = F(bold=bold); x.border = BD
@@ -54,13 +46,10 @@ def put(ws, r, c, v, fmt=None, bold=False, fill=None, wrap=False):
     if wrap: x.alignment = WRAP
     return x
 
-
 def build(df: pd.DataFrame, path):
     n = len(df); last = n + 1
     R = lambda c: f"Data_Profile!${COL[c]}$2:${COL[c]}${last}"
     wb = Workbook(); wb.remove(wb.active)
-
-    # ------------------------------------------------------------------ README
     ws = wb.create_sheet("README")
     ws["A1"] = "W2 – Data Quality của hồ sơ khách hàng (Behavioral EWS)"; ws["A1"].font = F(bold=True, size=14)
     lines = [
@@ -78,8 +67,6 @@ def build(df: pd.DataFrame, path):
         r = 3 + i
         ws.cell(row=r, column=1, value=a).font = F(bold=True); c = ws.cell(row=r, column=2, value=b); c.font = F(); c.alignment = WRAP
     ws.column_dimensions["A"].width = 28; ws.column_dimensions["B"].width = 110
-
-    # ------------------------------------------------------------------ Q2b
     ws = wb.create_sheet("Q2b_Missing_outliers")
     ws["A1"] = "Q2b – Missing và outlier của hồ sơ (trên toàn bộ tập EWS)"; ws["A1"].font = F(bold=True, size=14)
     ws["A2"] = "Số lượng, tỷ lệ thiếu và thống kê mô tả. Công thức Excel trên sheet Data_Profile; bỏ qua ô trống."; ws["A2"].font = F(italic=True, color="666666")
@@ -105,8 +92,6 @@ def build(df: pd.DataFrame, path):
     ws.column_dimensions["A"].width = 22
     for c in "BCDEFGHIJK": ws.column_dimensions[c].width = 11
     ws.column_dimensions["L"].width = 80; ws.freeze_panes = "B5"
-
-    # ------------------------------------------------------------------ Q2c
     ws = wb.create_sheet("Q2c_Missing_bad_rate")
     ws["A1"] = "Q2c – Bad rate của nhóm thiếu so với danh mục (Good + Bad)"; ws["A1"].font = F(bold=True, size=14)
     ws["A2"] = "Bad = target gốc (90+ ngày trong 12 tháng đầu), CHỈ để phân tích xem 'thiếu' có mang thông tin rủi ro không."; ws["A2"].font = F(italic=True, color="666666")
@@ -126,8 +111,6 @@ def build(df: pd.DataFrame, path):
     ws.column_dimensions["A"].width = 22
     for c in "BCDEF": ws.column_dimensions[c].width = 15
     ws.column_dimensions["G"].width = 58
-
-    # ------------------------------------------------------------------ Outlier rules
     ws = wb.create_sheet("Outlier_Rules")
     ws["A1"] = "Quy tắc giá trị bất thường & số vi phạm"; ws["A1"].font = F(bold=True, size=14)
     ws["A2"] = "Ô vàng là ngưỡng, đổi được; số vi phạm tự tính lại. Phải khớp THRESH trong clean_rules.py."; ws["A2"].font = F(italic=True, color="666666")
@@ -153,8 +136,6 @@ def build(df: pd.DataFrame, path):
                  "Hãy dùng số đếm trực tiếp ở đây (trên tập EWS).")
     ws["A15"].alignment = WRAP; ws.merge_cells("A15:H15"); ws.row_dimensions[15].height = 30
     for c, w in zip("ABCDEFGH", [9, 17, 30, 10, 13, 11, 55, 34]): ws.column_dimensions[c].width = w
-
-    # ------------------------------------------------------------------ Drift
     ws = wb.create_sheet("Drift_Income")
     ws["A1"] = "Drift thu nhập theo tháng nộp hồ sơ"; ws["A1"].font = F(bold=True, size=14)
     ws["A2"] = ("Từ 01/07/2023 biểu mẫu LOS yêu cầu khai cả thu nhập khác → thu nhập khai báo tăng ~25% (trung vị 12 → 15 triệu). "
@@ -177,8 +158,6 @@ def build(df: pd.DataFrame, path):
     ch.legend = None; ch.title.overlay = False; ch.roundedCorners = False; ch.x_axis.delete = False; ch.y_axis.delete = False
     ch.y_axis.scaling.min = 0; ws.add_chart(ch, "G4")
     for c, w in zip("ABCDE", [18, 12, 15, 22, 18]): ws.column_dimensions[c].width = w
-
-    # ------------------------------------------------------------------ Quy tắc xử lý
     ws = wb.create_sheet("Quy_tac_xu_ly")
     ws["A1"] = "Danh sách quy tắc xử lý (chốt) & biến bị loại"; ws["A1"].font = F(bold=True, size=14)
     hdr(ws, 3, ["Nhóm", "Biến", "Vấn đề", "Quyết định", "Lý do / căn cứ", "Hàm trong clean_rules.py"])
@@ -200,8 +179,6 @@ def build(df: pd.DataFrame, path):
         for j, v in enumerate(row): put(ws, 4 + i, 1 + j, v, wrap=True, bold=(j == 0))
         ws.row_dimensions[4 + i].height = 44
     for c, w in zip("ABCDEF", [11, 30, 30, 36, 52, 24]): ws.column_dimensions[c].width = w
-
-    # ------------------------------------------------------------------ Data
     ws = wb.create_sheet("Data_Profile")
     for j, c in enumerate(DATA_COLS):
         x = ws.cell(row=1, column=1 + j, value=c); x.font = F(bold=True)
@@ -213,14 +190,12 @@ def build(df: pd.DataFrame, path):
     wb.calculation.fullCalcOnLoad = True
     wb.save(path)
 
-
 def main():
     df = cr.load_profile()
     C.INTERIM.mkdir(parents=True, exist_ok=True); C.OUT.mkdir(parents=True, exist_ok=True)
     cr.load_clean_profile().to_csv(C.INTERIM / "customer_profile_clean.csv", index=False)
     build(df, C.OUT / "W2_Customer_Profile_DQ.xlsx")
     print("Đã tạo outputs/W2_Customer_Profile_DQ.xlsx và data/interim/customer_profile_clean.csv")
-
 
 if __name__ == "__main__":
     main()
