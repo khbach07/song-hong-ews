@@ -8,7 +8,6 @@ from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_s
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
-
 from .features import BEHAVIOR, PROFILE
 
 VALIDATION_COHORT = pd.Timestamp("2023-09-01")

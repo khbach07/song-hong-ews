@@ -107,7 +107,6 @@ def run(raw: Path, out: Path, month: str | None):
                  and column != "open_month"]].to_csv(
         out / "features.csv.gz", index=False, compression={"method": "gzip", "compresslevel": 1}
     )
-
     results = {}
     for cutoff in (30, 90):
         target = f"Target_{cutoff}_3M"
@@ -169,7 +168,6 @@ def run(raw: Path, out: Path, month: str | None):
             save_csv(out, "scored.csv", live[SCORE_FIELDS])
             write_excel_inputs(out, performance, clean, live, inventory)
         scored_oot.to_csv(out / f"oot_predictions_{cutoff}.csv.gz", index=False, compression={"method": "gzip", "compresslevel": 1})
-
     counts = {key: int(value) for key, value in live.alert_level.value_counts().items()}
     summary = {
         "scope": coverage, "models": results, "snapshot_month": str(chosen_month),

@@ -40,7 +40,6 @@ def make_targets(long_df: pd.DataFrame) -> pd.DataFrame:
         hit = future.ge(threshold).any(axis=1)
         label = pd.Series(pd.NA, index=long_df.index, dtype="Int8")
         label.loc[at_risk & complete] = 0
-        # A recorded hit determines the result even if later follow-up is incomplete.
         label.loc[at_risk & hit] = 1
         status = np.select(
             [~at_risk, hit, complete, long_df.close_mob.le(long_df.mob + HORIZON)],

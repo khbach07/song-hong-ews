@@ -1,6 +1,5 @@
 """Generate an offline, filterable EWS monitoring dashboard."""
 import json
-
 from .thresholds import ACTIONS, LEVELS
 
 def write_dashboard(out, live, summary, backtest, thresholds):

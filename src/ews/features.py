@@ -1,6 +1,5 @@
 """W4 · Features based exclusively on information available by the snapshot."""
 import pandas as pd
-
 from .config import MOB_MIN
 
 BEHAVIOR = [

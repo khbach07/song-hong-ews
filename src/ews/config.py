@@ -35,7 +35,6 @@ LEAKAGE_COLS = [
 # Cột file trao đổi (ĐỀ XUẤT – chốt theo sheet Interface_Files)
 PANEL_COLS = ["app_id", "mob", "snap_date", "Target_30_3M", "Target_90_3M", "label_status"]
 
-
 def snap_date(open_month: str, mob: int):
     """snap_date = open_month + mob tháng, trả về ngày đầu tháng (pandas.Timestamp).
     open_month dạng 'yyyy-mm'. Cả nhóm dùng đúng hàm này."""
