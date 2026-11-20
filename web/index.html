@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sông Hồng | Early Warning System</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="mark" aria-hidden="true">SH</span><div>Sông Hồng<small>Early Warning System</small></div></div>
+    <nav aria-label="Điều hướng">
+      <button data-view="portfolio" aria-current="page">Danh mục &amp; cảnh báo</button>
+      <button data-view="validation">Kiểm định mô hình</button>
+      <button data-view="quality">Chất lượng dữ liệu</button>
+    </nav>
+    <div class="side-note">Đồ án quản trị rủi ro tín dụng<br>Snapshot lịch sử</div>
+  </aside>
+  <main>
+    <div id="error" role="alert" hidden></div>
+    <div id="portfolio" class="view">
+      <header><div><h1>Danh mục &amp; cảnh báo</h1><p>Dự báo DPD ≥ 30 trong ba tháng sau ngày đánh giá.</p></div>
+      <label>Tháng đánh giá<select id="month" disabled></select></label></header>
+      <div id="kpis" class="kpis" aria-live="polite"></div>
+      <section class="panel">
+        <h2>Phân bổ cảnh báo</h2>
+        <div id="distribution" class="distribution" aria-hidden="true"></div>
+        <div id="legend" class="legend"></div>
+      </section>
+      <section class="panel">
+        <div class="section-head"><div><h2>Danh sách rà soát</h2><p id="result-count" aria-live="polite"></p></div>
+        <a id="export" class="primary" aria-disabled="true">Tải CSV đã lọc</a></div>
+        <form id="filters" class="filters">
+          <label>Mã khoản vay<input id="query" type="search" placeholder="VD SH240…" maxlength="80"></label>
+          <label>Mức cảnh báo<select id="level"><option value="">Tất cả</option></select></label>
+          <label>Cohort<select id="cohort"><option value="">Tất cả</option><option>Dev</option><option>OOT</option></select></label>
+          <button class="primary">Áp dụng</button>
+        </form>
+        <div class="table-wrap"><table><thead><tr><th>Khoản vay</th><th>Cohort</th><th>MOB</th><th>DPD</th><th>PD 3M</th><th>Cảnh báo</th><th>Tín hiệu</th></tr></thead><tbody id="loans"></tbody></table></div>
+        <div class="pagination"><button id="prev" disabled>Trước</button><span id="page"></span><button id="next" disabled>Sau</button></div>
+      </section>
+    </div>
+    <div id="validation" class="view" hidden>
+      <header><div><h1>Kiểm định mô hình</h1><p>So sánh ngoài thời gian (OOT) và theo dõi độ khớp của PD 30+.</p></div></header>
+      <div id="model-kpis" class="kpis"></div>
+      <section class="panel"><h2>PD bình quân và tỷ lệ 30+ quan sát</h2><p>Chỉ gồm snapshot OOT có đủ ba tháng theo dõi và DPD hiện tại dưới 30.</p>
+      <div class="chart-key"><span>■ PD bình quân</span><span>■ Tỷ lệ quan sát</span></div>
+      <div class="chart-wrap"><canvas id="chart" role="img" aria-label="So sánh PD bình quân và tỷ lệ quan sát theo tháng. Bảng số liệu ở bên dưới."></canvas></div>
+      <details><summary>Xem số liệu theo tháng</summary><div id="monthly"></div></details></section>
+      <section class="panel"><h2>Hiệu quả theo mức cảnh báo · OOT 30+</h2><div id="capture"></div></section>
+      <section class="panel"><h2>Ngưỡng cố định từ validation</h2><div id="thresholds"></div><p>Tỷ trọng cảnh báo ở tháng khác có thể thay đổi theo phân phối điểm.</p></section>
+      <section class="panel"><h2>So sánh ứng viên · Validation 30+</h2><div id="comparison"></div></section>
+      <section class="panel"><h2>Hiệu chỉnh theo nhóm điểm · OOT 30+</h2><div id="calibration"></div></section>
+    </div>
+    <div id="quality" class="view" hidden>
+      <header><div><h1>Chất lượng dữ liệu</h1><p>Kiểm tra nguồn, dữ liệu thiếu và chỉ báo dịch chuyển tại lần huấn luyện.</p></div></header>
+      <section class="panel"><h2>Ba nguồn đầu vào</h2><div id="inventory"></div></section>
+      <section class="panel"><h2>Dữ liệu thiếu trước xử lý</h2><div id="missing"></div></section>
+      <section class="panel"><h2>Drift thu nhập</h2><div id="drift"></div></section>
+    </div>
+  </main>
+  <dialog id="detail"><form method="dialog"><button aria-label="Đóng chi tiết">Đóng</button></form><h2 id="detail-title"></h2><div id="detail-body"></div></dialog>
+</body>
+</html>
