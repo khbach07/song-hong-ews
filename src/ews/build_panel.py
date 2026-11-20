@@ -4,7 +4,6 @@ import pandas as pd
 
 from .config import DPD_CMP, DPD_COLS, DPD_MAIN, HORIZON, MOB_MIN
 
-
 def wide_to_long(perf: pd.DataFrame) -> pd.DataFrame:
     """Chuyển dữ liệu DPD từ dạng wide (dpd_01..dpd_24) sang dạng long theo (app_id, mob)."""
     parts = []
@@ -22,7 +21,6 @@ def wide_to_long(perf: pd.DataFrame) -> pd.DataFrame:
     return pd.concat(parts, ignore_index=True).sort_values(
         ["app_id", "mob"], ignore_index=True
     )
-
 
 def make_targets(long_df: pd.DataFrame) -> pd.DataFrame:
     """Gắn nhãn Target_30_3M và Target_90_3M trong cửa sổ 3 tháng tiếp theo."""
@@ -43,14 +41,12 @@ def make_targets(long_df: pd.DataFrame) -> pd.DataFrame:
         long_df.close_mob.isna() | long_df.close_mob.ge(long_df.mob + HORIZON)
     )
     result["full_followup"] = complete.loc[eligible_snapshot]
-
     for threshold in (DPD_MAIN, DPD_CMP):
         at_risk = long_df.dpd.lt(threshold)
         hit = future.ge(threshold).any(axis=1)
         label = pd.Series(pd.NA, index=long_df.index, dtype="Int8")
         label.loc[at_risk & complete] = 0
         label.loc[at_risk & hit] = 1
-
         closed_early = long_df.close_mob.notna() & long_df.close_mob.le(
             long_df.mob + HORIZON
         )
@@ -66,12 +62,10 @@ def make_targets(long_df: pd.DataFrame) -> pd.DataFrame:
         )
         result[f"Target_{threshold}_3M"] = label.loc[eligible_snapshot]
         result[f"status_{threshold}"] = status[eligible_snapshot.to_numpy()]
-
     result["label_end"] = (
         result.snap_date.dt.to_period("M") + HORIZON
     ).dt.to_timestamp()
     return result.reset_index(drop=True)
-
 
 def summarize_labels(panel: pd.DataFrame) -> pd.DataFrame:
     """Tổng hợp số lượng và tỷ trọng từng trạng thái gán nhãn (phục vụ 07_Backtesting)."""

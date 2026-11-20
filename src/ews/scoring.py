@@ -6,6 +6,7 @@ import joblib
 import pandas as pd
 from threadpoolctl import threadpool_limits
 
+from .artifacts import input_hashes, verify_artifacts
 from .clean_rules import clean_profile
 from .build_panel import wide_to_long
 from .data_check import load_data
@@ -14,6 +15,7 @@ from .pipeline import score_snapshot
 
 class HistoricalScorer:
     def __init__(self, raw, model_dir):
+        verify_artifacts(model_dir, kind="development")
         self.summary = json.loads((model_dir / "run_summary.json").read_text(encoding="utf-8"))
         self.thresholds = pd.read_csv(model_dir / "thresholds.csv", float_precision="round_trip")
         self.model_dir = model_dir
@@ -22,7 +24,12 @@ class HistoricalScorer:
         self._score_cached = lru_cache(maxsize=3)(self._score)
 
     def prepare(self):
+        expected = self.summary["input_sha256"]
+        if input_hashes(self.raw) != expected:
+            raise ValueError("Nguồn CSV khác lượt huấn luyện. Chạy run_ews.py để tạo bộ kết quả mới.")
         self.performance, profiles, self.inventory, _ = load_data(self.raw)
+        if input_hashes(self.raw) != expected:
+            raise ValueError("Nguồn CSV đã thay đổi trong lúc đọc")
         self.profiles = clean_profile(profiles)
         features = dpd_features(wide_to_long(self.performance))
         features = features.loc[features.snap_date.ge(pd.Timestamp(self.first_month))]

@@ -1,8 +1,8 @@
 """Run the full development, backtesting and reporting pipeline."""
 import argparse
-import hashlib
 import json
 from pathlib import Path
+from uuid import uuid4
 
 import joblib
 import numpy as np
@@ -10,9 +10,11 @@ import pandas as pd
 from threadpoolctl import threadpool_limits
 
 from . import clean_rules as cr
+from .artifacts import input_hashes, month_key, publication, seal
+from .workbook import write_workbook
 from .build_panel import make_targets, summarize_labels, wide_to_long
 from .config import DPD_COLS, OUT, RAW
-from .data_check import FILES, load_data
+from .data_check import load_data
 from .features import BEHAVIOR, PROFILE, dpd_features
 from .report import write_dashboard
 from .thresholds import ACTIONS, LEVELS, assign_level, choose_thresholds, reason_codes
@@ -36,6 +38,7 @@ def score_snapshot(live, model, fields, thresholds):
     live["reason"] = reason_codes(live)
     live["action"] = live.alert_level.map(ACTIONS)
     priority = {level: rank for rank, level in enumerate([*LEVELS, "Existing 30+"])}
+    live = live.astype({column: "float64" for column in live.select_dtypes("float32")})
     return live.sort_values(
         ["alert_level", "pd_3m", "app_id"],
         key=lambda column: column.map(priority) if column.name == "alert_level" else column,
@@ -59,7 +62,7 @@ def write_excel_inputs(out, performance, profiles, live, inventory):
         "features": sample[KEY + [col for col in BEHAVIOR if col not in KEY]],
         "alerts": sample[SCORE_FIELDS], "inventory": inventory,
     }
-    payload = {key: json.loads(frame.to_json(orient="split", date_format="iso"))
+    payload = {key: json.loads(frame.to_json(orient="split", date_format="iso", double_precision=15))
                for key, frame in tables.items()}
     (out / "excel_snapshot.json").write_text(json.dumps(payload, ensure_ascii=False),
                                             encoding="utf-8")
@@ -79,8 +82,25 @@ def alert_metrics(scored, target):
                       "event_capture": hits / events})
     return cells
 
+def publish_snapshot(out, reference, performance, profiles, inventory, live, summary, backtest, thresholds):
+    save_csv(out, "scored.csv", live[SCORE_FIELDS])
+    write_excel_inputs(out, performance, profiles, live, inventory)
+    (out / "run_summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, allow_nan=False), encoding="utf-8"
+    )
+    write_dashboard(out, live, summary, backtest, thresholds)
+    write_workbook(out, reference, summary)
+
 def run(raw: Path, out: Path, month: str | None):
-    out.mkdir(parents=True, exist_ok=True)
+    if month is not None:
+        month_key(month)
+    with publication(out) as staging:
+        _build_run(raw, staging, month)
+        seal(staging, "development")
+    print(f"Finished · {out.resolve()}", flush=True)
+
+def _build_run(raw, out, month):
+    hashes = input_hashes(raw)
     performance, profiles, inventory, coverage = load_data(raw)
     print(f"Sources checked · {len(performance):,} eligible loans", flush=True)
     clean = cr.clean_profile(profiles)
@@ -166,12 +186,10 @@ def run(raw: Path, out: Path, month: str | None):
             if live.empty:
                 raise ValueError(f"No eligible snapshots for {chosen_month}")
             live = score_snapshot(live, model, fields, thresholds)
-            save_csv(out, "scored.csv", live[SCORE_FIELDS])
-            write_excel_inputs(out, performance, clean, live, inventory)
         scored_oot.to_csv(out / f"oot_predictions_{cutoff}.csv.gz", index=False, compression={"method": "gzip", "compresslevel": 1})
     counts = {key: int(value) for key, value in live.alert_level.value_counts().items()}
     summary = {
-        "scope": coverage, "models": results, "snapshot_month": str(chosen_month),
+        "run_id": uuid4().hex, "scope": coverage, "models": results, "snapshot_month": str(chosen_month),
         "snapshot_total": len(live), "snapshot_alerts": counts,
         "labels": {str(cutoff): {
             cohort: {key: int(value) for key, value in counts_in_cohort.items()}
@@ -179,22 +197,23 @@ def run(raw: Path, out: Path, month: str | None):
                 (cohort, part[f"status_{cutoff}"].value_counts())
                 for cohort, part in panel.groupby("cohort")
             ]} for cutoff in (30, 90)},
-        "input_sha256": {key: hashlib.sha256((raw / file).read_bytes()).hexdigest()
-                          for key, file in FILES.items()},
+        "input_sha256": hashes,
     }
-    (out / "run_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2),
-                                         encoding="utf-8")
-    write_dashboard(out, live, summary, backtest, thresholds)
-    print(f"Finished · {out.resolve()}", flush=True)
+    if input_hashes(raw) != hashes:
+        raise ValueError("Nguồn CSV đã thay đổi trong lúc huấn luyện")
+    publish_snapshot(out, out, performance, clean, inventory, live, summary, backtest, thresholds)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", type=Path, default=RAW)
-    parser.add_argument("--out", type=Path, default=OUT)
+    parser.add_argument("--out", type=Path, default=OUT / "rebuilt")
     parser.add_argument("--month", help="Historical scoring snapshot, YYYY-MM")
     args = parser.parse_args()
-    with threadpool_limits(limits=2):
-        run(args.raw, args.out, args.month)
+    try:
+        with threadpool_limits(limits=2):
+            run(args.raw, args.out, args.month)
+    except (ValueError, OSError) as error:
+        parser.exit(2, f"EWS: {error}\n")
 
 if __name__ == "__main__":
     main()
