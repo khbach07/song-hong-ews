@@ -1,6 +1,6 @@
 # W4 · Đặc trưng hành vi tại thời điểm đánh giá
 
-**Phụ trách theo phân công gốc** Vân Anh. Module `src/ews/features.py`. Workbook `03_Risk_Indicators`.
+**Phụ trách theo phân công gốc** Vân Anh. Module `src/ews/features.py`. Workbook `03_Features`.
 
 | Cửa sổ | Đặc trưng | Ý nghĩa |
 |---|---|---|

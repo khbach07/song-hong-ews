@@ -14,7 +14,7 @@ Sản phẩm bàn giao: báo cáo Data Quality + danh sách quy tắc, `clean_ru
 |---|---|
 | `src/ews/clean_rules.py` | **Code chính của W2.** Đọc hồ sơ, đếm thiếu / ngoại lai / drift, làm sạch, gắn cờ, loại biến leakage. W4/W5 chỉ gọi hàm trong file này. |
 | `src/ews/dq_report.py` | Tạo file Excel báo cáo `W2_Customer_Profile_DQ.xlsx` **theo đúng kiểu mẫu của cô** (`Q02_Data_description.xlsx`: Q2b, Q2c): các bảng tổng hợp là công thức Excel (COUNTIFS, PERCENTILE, MEDIAN…) chạy trên dữ liệu thật. Đồng thời xuất `data/interim/customer_profile_clean.csv` (hồ sơ đã sạch). |
-| `outputs/W2_Customer_Profile_DQ.xlsx` | Báo cáo Excel. Sheet: Q2b_Missing_outliers, Q2c_Missing_bad_rate, Outlier_Rules, Drift_Income, Quy_tac_xu_ly, Data_Profile (dữ liệu), README. |
+| `data/interim/W2_Customer_Profile_DQ.xlsx` | Báo cáo Excel. Sheet: Q2b_Missing_outliers, Q2c_Missing_bad_rate, Outlier_Rules, Drift_Income, Quy_tac_xu_ly, Data_Profile (dữ liệu), README. |
 | `docs/EWS_Excel_Template.xlsx` | Workbook khung của nhóm. Sheet `02_Customer_Profile` đã áp đúng các quy tắc W2 bằng công thức; `DQ_Report` là nơi tóm tắt kết quả. |
 
 ## 3. Cách chạy (làm lần lượt)
@@ -24,7 +24,7 @@ pip install -r requirements.txt
 # 2) Chạy từ thư mục gốc repo
 PYTHONPATH=src python -m ews.dq_report        # Windows PowerShell:  $env:PYTHONPATH="src"; python -m ews.dq_report
 ```
-Kết quả: `outputs/W2_Customer_Profile_DQ.xlsx` và `data/interim/customer_profile_clean.csv`.
+Kết quả: `data/interim/W2_Customer_Profile_DQ.xlsx` và `data/interim/customer_profile_clean.csv`.
 Mở file Excel: Excel sẽ tự tính công thức khi mở (có thể mất vài giây vì có ~59 nghìn dòng).
 
 Dùng trong code của bạn khác:

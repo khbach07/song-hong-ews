@@ -1,6 +1,6 @@
 # W5 · Mô hình, kiểm định và bằng chứng
 
-**Phụ trách theo phân công gốc** Được. Module `src/ews/train_model.py`. Workbook `04_Model_Scoring` và đầu ra kiểm định.
+**Phụ trách theo phân công gốc** Được. Module `src/ews/train_model.py`. Workbook `08_Validation_30`, `09_Validation_90` và đầu ra kiểm định.
 
 1. Ghép W3–W4 theo khóa snapshot. Chọn nhãn quan sát đầy đủ. Tách riêng 30+ và 90+ vì hai mục tiêu có điều kiện đầu vào khác nhau.
 2. Chia Dev theo tháng mở. Chỉ giữ Train có `label_end` trước lúc bắt đầu Validation, và Validation có nhãn trưởng thành trước OOT. OOT tách theo cohort nguồn. Cùng một khoản không đi qua nhiều tập.

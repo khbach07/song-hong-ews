@@ -1,6 +1,6 @@
 # W6 · Ngưỡng, danh sách rà soát và web
 
-**Vai trò theo phân công gốc** Risk Alerts & Dashboard. Module `src/ews/thresholds.py`, `src/ews/scoring.py`, `serve_ews.py` và `web/`. Workbook `05_EWS_Alerts`, `06_Dashboard`.
+**Vai trò theo phân công gốc** Risk Alerts & Dashboard. Module `src/ews/thresholds.py`, `src/ews/scoring.py`, `serve_ews.py` và `web/`. Workbook `05_EWS_Alerts`, `00_Overview`.
 
 Ngưỡng là cận dưới của cấp. Từ validation, giới hạn tỷ trọng tích lũy Yellow trở lên 20%, Orange trở lên 10%, Red 3%. Các khoản cùng điểm được giữ cùng nhóm. Ngưỡng được đóng băng cùng mô hình. Tỷ trọng theo tháng phản ánh phân phối PD của tháng đó.
 

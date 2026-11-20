@@ -2,7 +2,7 @@
 
 ## Khởi động
 
-Từ thư mục dự án, chạy `python serve_ews.py` trong môi trường đã cài `requirements.txt`. Chờ log hiển thị địa chỉ rồi mở <http://127.0.0.1:8765>. Mặc định web lấy tháng mới nhất có dữ liệu đủ điều kiện. Nhấn Ctrl+C để dừng. Web phục vụ trên loopback và dùng artifact local đáng tin cậy.
+Từ thư mục dự án, chạy `python serve_ews.py` trong môi trường đã cài `requirements.txt`. Chờ log hiển thị địa chỉ rồi mở <http://127.0.0.1:8765>. Mặc định web mở tháng bàn giao ghi trong run_summary.json. Nhấn Ctrl+C để dừng. Web phục vụ trên loopback và dùng artifact local đáng tin cậy.
 
 | Nhu cầu | Lệnh |
 |---|---|
@@ -11,7 +11,8 @@ Từ thư mục dự án, chạy `python serve_ews.py` trong môi trường đã
 | Dùng thư mục nguồn khác | `python serve_ews.py --raw data/raw_new --model-dir outputs/rebuilt` |
 | Xuất snapshot và HTML độc lập | `python score_ews.py --month 2024-09 --out outputs/sep_2024` |
 
-Thư mục model cần có `model_30.joblib`, `run_summary.json`, `thresholds.csv`, `backtest_monthly.csv`, `calibration_30.csv`, `comparison_30.csv`, `source_inventory.csv`, `missing_profile.csv` và `income_drift.csv` từ cùng lần chạy. Dashboard kiểm định và chất lượng luôn phản ánh lần huấn luyện đó. Snapshot chấm từ nguồn hiện tại. Khi đổi nguồn, giữ nguyên schema và ngữ nghĩa thời gian. Khởi động lại sau khi thay nguồn hoặc artifact.
+Thư mục model là bộ kết quả do `run_ews.py` tạo. Khi khởi động, web kiểm tra `manifest.json` và fingerprint của ba CSV, sau đó nạp mô hình 30+ và cache tối đa ba tháng. Dashboard kiểm định và chất lượng phản ánh lượt huấn luyện hiện trong thanh điều hướng. Nếu đổi dữ liệu, chạy lại pipeline với `--raw` và `--out` mới rồi khởi động web bằng đúng cặp thư mục.
+
 
 ## API và luồng xử lý
 

@@ -1,6 +1,6 @@
 # W3 · Snapshot, target và cửa sổ theo dõi
 
-**Phụ trách theo phân công gốc** Quanh. Module `src/ews/build_panel.py`. Workbook `07_Backtesting`.
+**Phụ trách theo phân công gốc** Quanh. Module `src/ews/build_panel.py`. Workbook `13_Labels`.
 
 `wide_to_long` tạo dãy liên tục theo MOB quan sát, giữ ô DPD thiếu trong dãy để phép shift phản ánh đúng tháng lịch. `snap_date` đại diện tháng `open_month + MOB`. Chọn snapshot từ MOB 3, DPD tháng t có dữ liệu và khoản còn mở sau tháng t.
 

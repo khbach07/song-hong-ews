@@ -1,6 +1,6 @@
 # W1 · Tích hợp dữ liệu và phạm vi
 
-**Phụ trách theo phân công gốc** Thiên An. Module `src/ews/data_check.py`. Tương ứng workbook `00_Instructions`, `01_Raw_Data` và bàn giao workbook.
+**Phụ trách theo phân công gốc** Thiên An. Module `src/ews/data_check.py`. Tương ứng workbook `06_Source_Inventory`, `01_Raw_AsOf` và bàn giao workbook.
 
 | Nguồn | Grain | Vai trò |
 |---|---|---|
