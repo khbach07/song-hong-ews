@@ -2,8 +2,8 @@
 
 const byId = id => document.getElementById(id);
 const levels = ["Green", "Yellow", "Orange", "Red", "Existing 30+"];
-const number = new Intl.NumberFormat("vi-VN", {maximumFractionDigits: 0});
-const decimal = new Intl.NumberFormat("vi-VN", {maximumFractionDigits: 2});
+const number = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+const decimal = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 2 });
 const pct = value => value == null ? "—" : decimal.format(value * 100) + "%";
 const count = value => value == null ? "—" : number.format(value);
 const metric = value => value == null ? "—" : value.toFixed(4);
@@ -140,7 +140,7 @@ async function loadSnapshot(page = 1) {
   byId("export").removeAttribute("href");
   byId("export").setAttribute("aria-disabled", "true");
   try {
-    const data = await fetchJson("/api/snapshot?" + params, {signal: request.signal});
+    const data = await fetchJson("/api/snapshot?" + params, { signal: request.signal });
     if (!request.signal.aborted) showSnapshot(data);
   } catch (error) {
     if (!request.signal.aborted) {
@@ -225,7 +225,7 @@ function showReference() {
     ["model", "Ứng viên"], ["average_precision", "AP", metric],
     ["roc_auc", "ROC-AUC", metric], ["brier", "Brier", metric],
   ]);
-  table("calibration", meta.calibration.map((row, i) => ({...row, band: i + 1})), [
+  table("calibration", meta.calibration.map((row, i) => ({ ...row, band: i + 1 })), [
     ["band", "Nhóm điểm từ thấp đến cao"], ["snapshots", "Snapshot", count],
     ["mean_pd", "PD bình quân", pct], ["observed_rate", "Quan sát", pct],
   ]);
