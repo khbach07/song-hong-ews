@@ -19,7 +19,7 @@
       <button data-view="validation">Kiểm định mô hình</button>
       <button data-view="quality">Chất lượng dữ liệu</button>
     </nav>
-    <div class="side-note">Đồ án quản trị rủi ro tín dụng<br>Snapshot lịch sử</div>
+    <div class="side-note">Đồ án quản trị rủi ro tín dụng<br>Snapshot lịch sử<br><span id="run-reference"></span></div>
   </aside>
   <main>
     <div id="error" role="alert" hidden></div>
@@ -110,6 +110,11 @@
         <div id="comparison"></div>
       </section>
       <section class="panel">
+        <h2>30+ và 90+ ngoài thời gian</h2>
+        <p>Mỗi mục tiêu có tập đủ điều kiện riêng. AP baseline dùng DPD hiện tại.</p>
+        <div id="oot-targets"></div>
+      </section>
+      <section class="panel">
         <h2>Hiệu chỉnh theo nhóm điểm · OOT 30+</h2>
         <div id="calibration"></div>
       </section>
@@ -121,6 +126,7 @@
           <p>Kiểm tra nguồn, dữ liệu thiếu và chỉ báo dịch chuyển tại lần huấn luyện.</p>
         </div>
       </header>
+      <div id="scope-kpis" class="kpis"></div>
       <section class="panel">
         <h2>Ba nguồn đầu vào</h2>
         <div id="inventory"></div>
@@ -128,6 +134,10 @@
       <section class="panel">
         <h2>Dữ liệu thiếu trước xử lý</h2>
         <div id="missing"></div>
+      </section>
+      <section class="panel">
+        <h2>Trạng thái gán nhãn theo cohort</h2>
+        <div id="label-summary"></div>
       </section>
       <section class="panel">
         <h2>Drift thu nhập</h2>

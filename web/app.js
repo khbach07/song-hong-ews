@@ -229,6 +229,23 @@ function showReference() {
     ["band", "Nhóm điểm từ thấp đến cao"], ["snapshots", "Snapshot", count],
     ["mean_pd", "PD bình quân", pct], ["observed_rate", "Quan sát", pct],
   ]);
+  table("oot-targets", Object.entries(meta.models).map(([target, result]) => ({
+    target: target + "+ / 3M", model: result.champion, ...result.oot,
+    baseline: result.oot_baseline.average_precision,
+  })), [
+    ["target", "Mục tiêu"], ["model", "Mô hình"], ["n", "Snapshot", count],
+    ["events", "Dương", count], ["average_precision", "AP", metric], ["baseline", "AP baseline", metric],
+    ["roc_auc", "ROC-AUC", metric], ["brier", "Brier", metric],
+  ]);
+  kpis("scope-kpis", [
+    ["Khoản vay trong phạm vi", count(meta.scope.eligible_loans)],
+    ["Performance thiếu hồ sơ", count(meta.scope.perf_unmatched_profile)],
+    ["Khoản loại theo phạm vi", count(meta.scope.scope_excluded)],
+  ]);
+  table("label-summary", meta.labels, [
+    ["target_type", "Mục tiêu"], ["cohort", "Cohort"], ["status", "Trạng thái"],
+    ["snapshots", "Snapshot", count], ["share_pct", "Tỷ trọng", value => pct(value / 100)],
+  ]);
   table("inventory", meta.inventory, [
     ["source", "Nguồn"], ["rows", "Số dòng", count], ["unique_app_ids", "Mã duy nhất", count],
     ["match_perf", "Mã khớp với performance", count],
@@ -264,6 +281,8 @@ async function start() {
     meta = await fetchJson("/api/meta");
     for (const level of levels) byId("level").add(new Option(level, level));
     for (const month of [...meta.months].reverse()) byId("month").add(new Option(month, month));
+    byId("run-reference").textContent = "Lượt mô hình " + meta.run_id.slice(0, 8);
+    if (meta.months.includes(meta.snapshot_month)) byId("month").value = meta.snapshot_month;
     showReference();
     if (!meta.months.length) throw new Error("Nguồn hiện tại chưa có tháng nào đủ điều kiện chấm.");
     byId("month").disabled = false;

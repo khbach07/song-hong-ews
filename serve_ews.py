@@ -27,6 +27,8 @@ def handler_for(scorer):
         return records(pd.read_csv(scorer.model_dir / f"{name}.csv"))
     metadata = {
         "months": scorer.months, "models": scorer.summary["models"],
+        "run_id": scorer.summary["run_id"], "snapshot_month": scorer.summary["snapshot_month"],
+        "scope": scorer.summary["scope"], "labels": table("label_summary"),
         "thresholds": records(scorer.thresholds), "monthly": table("backtest_monthly"),
         "calibration": table("calibration_30"), "comparison": table("comparison_30"),
         "inventory": table("source_inventory"), "missing": table("missing_profile"),
@@ -94,7 +96,7 @@ def handler_for(scorer):
             last = max(1, (len(matches) + size - 1) // size)
             page = min(page, last)
             self.send_json({
-                "month": month, "total": len(live), "matched": len(matches),
+                "month": month, "run_id": scorer.summary["run_id"], "total": len(live), "matched": len(matches),
                 "counts": live.alert_level.value_counts().to_dict(),
                 "eligible": int(live.pd_3m.notna().sum()),
                 "page": page, "pages": last,
@@ -108,9 +110,12 @@ def main():
     parser.add_argument("--raw", type=Path, default=RAW)
     parser.add_argument("--model-dir", type=Path, default=OUT)
     args = parser.parse_args()
-    scorer = HistoricalScorer(args.raw, args.model_dir)
-    print("Đang chuẩn bị lịch sử khoản vay…", flush=True)
-    scorer.prepare()
+    try:
+        scorer = HistoricalScorer(args.raw, args.model_dir)
+        print("Đang chuẩn bị lịch sử khoản vay…", flush=True)
+        scorer.prepare()
+    except (ValueError, OSError) as error:
+        parser.exit(2, f"EWS: {error}\n")
     with HTTPServer(("127.0.0.1", args.port), handler_for(scorer)) as server:
         print(f"EWS · http://127.0.0.1:{server.server_port}", flush=True)
         try:
