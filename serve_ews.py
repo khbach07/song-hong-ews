@@ -86,7 +86,6 @@ def handler_for(scorer):
                 matches = matches.loc[matches.app_id.str.contains(search, case=False, regex=False)]
             if url.path == "/api/export":
                 exported = matches[SCORE_FIELDS].copy()
-                # Keep externally supplied text inert when the CSV is opened in a spreadsheet.
                 risky = exported.app_id.str.match(r"^[\s]*[=+@-]", na=False)
                 exported.loc[risky, "app_id"] = "'" + exported.loc[risky, "app_id"]
                 self.send_bytes(exported.to_csv(index=False).encode("utf-8-sig"),
