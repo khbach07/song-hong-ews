@@ -3,11 +3,10 @@ data/raw/*
 data/interim/*
 !data/raw/.gitkeep
 !data/interim/.gitkeep
-outputs/*
-!outputs/.gitkeep
 *.zip
 __pycache__/
 *.pyc
 .venv/
 .ipynb_checkpoints/
 ~$*.xlsx
+.pytest_cache

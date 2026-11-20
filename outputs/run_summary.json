@@ -1,0 +1,252 @@
+{
+  "run_id": "22048f4b1cae42a29705106598a38122",
+  "scope": {
+    "perf_unmatched_profile": 129,
+    "scope_excluded": 800,
+    "eligible_loans": 58071,
+    "profile_matches": {
+      "Dev": {
+        "matched": 47000,
+        "approved": 47000,
+        "approved_matched": 47000
+      },
+      "OOT": {
+        "matched": 11871,
+        "approved": 11871,
+        "approved_matched": 11871
+      }
+    },
+    "approval_month_differs_from_open_proxy": 0
+  },
+  "models": {
+    "30": {
+      "champion": "Gradient Boosting",
+      "features": [
+        "mob",
+        "dpd_current",
+        "dpd_mean_3",
+        "dpd_max_3",
+        "late_months_3",
+        "dpd_delta_1",
+        "dpd_max_6",
+        "late_months_6",
+        "dpd_obs_6",
+        "restructured",
+        "loan_amount_mil",
+        "dti_pct",
+        "cic_hist_months",
+        "num_lenders",
+        "inq_6m",
+        "dpd_cnt_12m",
+        "card_util_pct",
+        "deposit_avg_3m_mil",
+        "f_card_missing",
+        "f_deposit_missing"
+      ],
+      "splits": {
+        "Train": {
+          "snapshots": 53540,
+          "loans": 18166,
+          "events": 2164,
+          "first": "2023-04-01",
+          "last": "2023-08-01",
+          "label_end_max": "2023-11-01"
+        },
+        "Validation": {
+          "snapshots": 3895,
+          "loans": 3895,
+          "events": 180,
+          "first": "2023-12-01",
+          "last": "2023-12-01",
+          "label_end_max": "2024-03-01"
+        },
+        "OOT": {
+          "snapshots": 109062,
+          "loans": 11814,
+          "events": 1405,
+          "first": "2024-04-01",
+          "last": "2025-03-01",
+          "label_end_max": "2025-06-01"
+        }
+      },
+      "oot": {
+        "n": 109062,
+        "events": 1405,
+        "event_rate": 0.012882580550512553,
+        "average_precision": 0.4352309848000594,
+        "roc_auc": 0.827483621784581,
+        "brier": 0.008975481672425015,
+        "mean_pd": 0.025831522867595543
+      },
+      "oot_baseline": {
+        "n": 109062,
+        "events": 1405,
+        "event_rate": 0.012882580550512553,
+        "average_precision": 0.341707150042257,
+        "roc_auc": 0.6763973145633835,
+        "brier": null,
+        "mean_pd": null
+      },
+      "alert_performance": [
+        {
+          "level": "Green",
+          "snapshots": 93777,
+          "events": 501,
+          "alert_share": 0.8598503603454916,
+          "event_rate": 0.005342461371125116,
+          "event_capture": 0.35658362989323844
+        },
+        {
+          "level": "Yellow",
+          "snapshots": 9836,
+          "events": 153,
+          "alert_share": 0.0901872329500651,
+          "event_rate": 0.015555103700691337,
+          "event_capture": 0.10889679715302492
+        },
+        {
+          "level": "Orange",
+          "snapshots": 4792,
+          "events": 232,
+          "alert_share": 0.04393831031890118,
+          "event_rate": 0.048414023372287146,
+          "event_capture": 0.16512455516014235
+        },
+        {
+          "level": "Red",
+          "snapshots": 657,
+          "events": 519,
+          "alert_share": 0.006024096385542169,
+          "event_rate": 0.7899543378995434,
+          "event_capture": 0.3693950177935943
+        }
+      ]
+    },
+    "90": {
+      "champion": "Gradient Boosting",
+      "features": [
+        "mob",
+        "dpd_current",
+        "dpd_mean_3",
+        "dpd_max_3",
+        "late_months_3",
+        "dpd_delta_1",
+        "dpd_max_6",
+        "late_months_6",
+        "dpd_obs_6",
+        "restructured",
+        "loan_amount_mil",
+        "dti_pct",
+        "cic_hist_months",
+        "num_lenders",
+        "inq_6m",
+        "dpd_cnt_12m",
+        "card_util_pct",
+        "deposit_avg_3m_mil",
+        "f_card_missing",
+        "f_deposit_missing"
+      ],
+      "splits": {
+        "Train": {
+          "snapshots": 54684,
+          "loans": 18352,
+          "events": 813,
+          "first": "2023-04-01",
+          "last": "2023-08-01",
+          "label_end_max": "2023-11-01"
+        },
+        "Validation": {
+          "snapshots": 3970,
+          "loans": 3970,
+          "events": 62,
+          "first": "2023-12-01",
+          "last": "2023-12-01",
+          "label_end_max": "2024-03-01"
+        },
+        "OOT": {
+          "snapshots": 110343,
+          "loans": 11871,
+          "events": 1709,
+          "first": "2024-04-01",
+          "last": "2025-03-01",
+          "label_end_max": "2025-06-01"
+        }
+      },
+      "oot": {
+        "n": 110343,
+        "events": 1709,
+        "event_rate": 0.015488069021143162,
+        "average_precision": 0.97069357897107,
+        "roc_auc": 0.9941753949381926,
+        "brier": 0.005194363096350126,
+        "mean_pd": 0.007618332546803438
+      },
+      "oot_baseline": {
+        "n": 110343,
+        "events": 1709,
+        "event_rate": 0.015488069021143162,
+        "average_precision": 0.9563712368749729,
+        "roc_auc": 0.9891470199650313,
+        "brier": null,
+        "mean_pd": null
+      },
+      "oot_current_dpd_below_30": {
+        "n": 109062,
+        "events": 520,
+        "event_rate": 0.00476793016816123,
+        "average_precision": 0.8860993435638702,
+        "roc_auc": 0.9811189890336671,
+        "brier": 0.0022617562727669555,
+        "mean_pd": 0.002197378117122538
+      }
+    }
+  },
+  "snapshot_month": "2025-06",
+  "snapshot_total": 36811,
+  "snapshot_alerts": {
+    "Green": 29157,
+    "Yellow": 3069,
+    "Orange": 2408,
+    "Existing 30+": 1578,
+    "Red": 599
+  },
+  "labels": {
+    "30": {
+      "Dev": {
+        "complete_no_event": 716428,
+        "incomplete_followup": 118731,
+        "already_at_threshold": 34979,
+        "event_observed": 17309,
+        "closed_early": 8871
+      },
+      "OOT": {
+        "complete_no_event": 107657,
+        "incomplete_followup": 33353,
+        "already_at_threshold": 4833,
+        "event_observed": 1462,
+        "closed_early": 586
+      }
+    },
+    "90": {
+      "Dev": {
+        "complete_no_event": 738383,
+        "incomplete_followup": 119964,
+        "already_at_threshold": 22755,
+        "closed_early": 8871,
+        "event_observed": 6345
+      },
+      "OOT": {
+        "complete_no_event": 108634,
+        "incomplete_followup": 33492,
+        "already_at_threshold": 3450,
+        "event_observed": 1729,
+        "closed_early": 586
+      }
+    }
+  },
+  "input_sha256": {
+    "perf": "ec644a49921c3a996c7c79536c4d2d8e97f62b923a164c31d723176d4e124957",
+    "dev": "05fe496a0936d414d57b27a515b262baa6c68cbfb179e6e4642e5ec8bd519687",
+    "oot": "26685f6dbc43eb6e8631cabdc936d86a594db5a676c850581cb4d35997ce9f0d"
+  }
+}

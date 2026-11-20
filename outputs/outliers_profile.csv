@@ -1,0 +1,10 @@
+﻿rule_id,variable,condition,n_violations,pct
+R01a,age,age < 18,61,0.0010504382566169
+R01b,age,age > 75,61,0.0010504382566169
+R02,income_mil,income_mil > 500,76,0.0013087427459489247
+R03,dti_pct,dti_pct > 200,17,0.0002927450879096279
+R04,card_util_pct,card_util_pct > 100,1704,0.029343389988117995
+R05,work_months,work_months > (age-18)*12,0,0.0
+R06,cic_hist_months,cic_hist_months > (age-18)*12,0,0.0
+R07,dpd_cnt_6m,dpd_cnt_6m > dpd_cnt_12m,0,0.0
+R08,dpd_cnt_12m,dpd_cnt_12m > cic_hist_months,0,0.0

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "kind": "development",
+  "files": {
+    "EWS_Excel.xlsx": "6506a53efce9b142134ee802869a197c3d02399c43f9cc930529d8fca757bc42",
+    "backtest_monthly.csv": "1ad605a3f29529cf5c14488e68f3e3f4e47230236ecd5bdc442d96a07f2ac092",
+    "calibration_30.csv": "2cf205a9912ef51053ce928a17a1980c8cb5187591401489a2c5812d4b4d71f2",
+    "coef.csv": "63a0f3a57d5ca14e05615321efe861233f97c0e4e3c82372550ca9fa6fd0cf4a",
+    "comparison_30.csv": "2c848dc43a835c148fd61c62ab4e83d0957df05f4840ffa376545e2880921a61",
+    "comparison_90.csv": "2997b19474752635adfbbf434ab9bd5d56b6e9a3c1cf78bf1c3b60baf843e1b0",
+    "dashboard.html": "7a3f58b398f758d040ee0884b951e7346393d008cc0d71c40a624422143d03df",
+    "excel_snapshot.json": "42b796140140f8a22f2c8993339cd56dbb611f37b7f42d19f717835618d7939a",
+    "features.csv.gz": "74d5433b49d19bc1cc182f807756fbc126f58958afbde1260db8339e410311d6",
+    "income_drift.csv": "54907db9785c8cd296f80b179be76c2aed91e552029642ab5d70252d0da3a27b",
+    "label_summary.csv": "766bee2b812c7d4f73692fa5e87543563cb94eaebcf7518f7e956175c62b5a26",
+    "missing_profile.csv": "27d3bd812dfb1aaacf48c68a2bc28011ba4a2d2f288ac51b83142ec72a47a08b",
+    "model_30.joblib": "bcce3901938df7954c7a7141e213c5bdb883f381ae7e3ec6fa071be3d34dab73",
+    "model_90.joblib": "8afd4e5d589868e334f1b844b291d048e55b66cacb3f257ddced4b4d72be9a44",
+    "oot_predictions_30.csv.gz": "d4b9bba43bb83391fbe3f7e361a7eecf7987c2f9e8953d7643786e24a7d29155",
+    "oot_predictions_90.csv.gz": "27ae2db1d86bb9da39b7438cc3c7ec28998e375f16a969361814b873004ab309",
+    "outliers_profile.csv": "f3d7c82a9ca1ba4c611be1f5b0e5f504008a52fc0c67e5263e3e75931d3b2e95",
+    "panel_target.csv.gz": "8dd6b1858eaef2c47c7e4c54001d773c7a873fce6e667351f042636bb53ee15f",
+    "run_summary.json": "bb15a23fddf3119de4f0f234833c4ae5bb91ee97b36c72af01c9475c4d2b27a8",
+    "scored.csv": "a21ad046c02d00b45ecea2465cbc854f874eeb8b7fbae215d5844e578b3df2ff",
+    "source_inventory.csv": "df2b5a976588db84427cf8aa3abda7a722041f4a2f255b4c069aefd22dcdbca8",
+    "thresholds.csv": "690edda062d7b749231b1e03e391e29dde6d28229e84a9cf6abcd35624904fd6"
+  }
+}
