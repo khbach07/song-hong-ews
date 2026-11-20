@@ -10,7 +10,7 @@ import pandas as pd
 from threadpoolctl import threadpool_limits
 
 from . import clean_rules as cr
-from .build_panel import make_targets, wide_to_long
+from .build_panel import make_targets, summarize_labels, wide_to_long
 from .config import DPD_COLS, OUT, RAW
 from .data_check import FILES, load_data
 from .features import BEHAVIOR, PROFILE, dpd_features
@@ -103,6 +103,7 @@ def run(raw: Path, out: Path, month: str | None):
         raise ValueError("Snapshot coverage mismatch between targets and features")
     del long, features
     panel.to_csv(out / "panel_target.csv.gz", index=False, compression={"method": "gzip", "compresslevel": 1})
+    save_csv(out, "label_summary.csv", summarize_labels(panel))
     table[KEY + [column for column in table if column not in KEY and column not in panel
                  and column != "open_month"]].to_csv(
         out / "features.csv.gz", index=False, compression={"method": "gzip", "compresslevel": 1}
