@@ -3,9 +3,8 @@ data/raw/*
 data/interim/*
 !data/raw/.gitkeep
 !data/interim/.gitkeep
-outputs/*.csv
-!outputs/coef.csv
-!outputs/thresholds.csv
+outputs/*
+!outputs/.gitkeep
 *.zip
 __pycache__/
 *.pyc
