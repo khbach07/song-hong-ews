@@ -29,7 +29,7 @@
 | `dpd_delta_1` | DPD tại t trừ DPD tại t−1, để trống khi thiếu một đầu |
 | `dpd_max_6`, `late_months_6`, `dpd_obs_6` | Mức cao nhất, số tháng quá hạn và số tháng thật sự có DPD trong t−5 đến t |
 | `restructured` | 1 nếu thời điểm cơ cấu đã đến vào hoặc trước t, 0 nếu chưa ghi nhận |
-| `loan_amount_mil`, `dti_pct` | Quy mô vay và nghĩa vụ nợ/thu nhập lúc xin vay, DTI được chặn trên ở 200 theo quy tắc W2 |
+| `loan_amount_mil`, `dti_pct` | Quy mô vay và nghĩa vụ nợ/thu nhập lúc xin vay, DTI trên 200 được gắn cờ và giữ giá trị theo cấu hình mặc định của W2 |
 | `cic_hist_months`, `num_lenders`, `inq_6m`, `dpd_cnt_12m` | Độ dài lịch sử, số tổ chức có dư nợ, số lần tra cứu và số lần trễ theo CIC lúc xin vay |
 | `card_util_pct`, `deposit_avg_3m_mil` | Mức sử dụng thẻ và số dư tiền gửi tại lúc xin vay. Giữ giá trị vượt 100% và tín hiệu thiếu riêng. |
 
