@@ -1,0 +1,292 @@
+﻿SONG HONG  |  BEHAVIORAL EARLY WARNING SYSTEM
+HƯỚNG DẪN PHÂN CÔNG CÔNG VIỆC
+SONG HONG – BEHAVIORAL EARLY WARNING SYSTEM
+Mục tiêu: dự báo sớm khả năng khách hàng phát sinh quá hạn trong 3 tháng tiếp theo và hiển thị cảnh báo trên Excel.
+1. PHÂN CÔNG NHANH – MỖI THÀNH VIÊN CẦN LÀM GÌ?
+Bảng dưới đây là phần giao việc chính. Mỗi thành viên phụ trách một mảng, một module Python và các sheet Excel tương ứng.
+Tên
+	Thành viên
+	Nhiệm vụ chính
+	Module code
+	Sheet Excel
+	Thiên An
+	W1 – Data Manager & Integrator
+	Hiểu cấu trúc các file, mô tả các cột, kiểm tra liên kết dữ liệu và ghép workbook cuối.
+	Kiểm tra/join dữ liệu
+	00_Instructions; 01_Raw_Data; ghép workbook
+	Lệ Xuân
+	W2 – Data Quality Controller
+	Kiểm tra thiếu dữ liệu, ngoại lai, drift và chốt quy tắc loại biến/rò rỉ dữ liệu.
+	clean_rules.py
+	02_Customer_Profile
+	Quanh
+	W3 – Target & Labeling
+	Chuyển dữ liệu DPD wide sang long và xác định khách hàng có phát sinh 30+ hoặc 90+ trong 3 tháng tới.
+	build_panel.py
+	07_Backtesting
+	Vân Anh
+	W4 – Feature Engineering
+	Tạo các chỉ báo từ lịch sử DPD và thông tin hồ sơ có sẵn tại thời điểm đánh giá.
+	features.py
+	03_Risk_Indicators
+	Được
+	W5 – Machine Learning
+	Ghép dữ liệu, chia train/OOT theo thời gian, huấn luyện và so sánh LR, DT, RF.
+	train_model.py
+	04_Model_Scoring
+	
+
+	W6 – Risk Alerts & Dashboard
+	Chọn ngưỡng PD, phân loại Green/Yellow/Orange/Red, tạo lý do cảnh báo và dashboard.
+	thresholds.py
+	05_EWS_Alerts; 06_Dashboard
+	
+
+Cách đọc bảng phân công
+W1–W6 là mã thành viên. “Module code” là phần Python mỗi người phụ trách. “Sheet Excel” là phần giao diện/dữ liệu người đó cần xây dựng. W1 chịu trách nhiệm ghép các sheet thành workbook cuối cùng.
+	
+
+2. NHÓM ĐANG XÂY DỰNG CÔNG CỤ GÌ?
+Nhóm xây dựng Behavioral EWS: hệ thống theo dõi các khách hàng đã có khoản vay, quan sát lịch sử trả nợ của họ và cảnh báo khi có dấu hiệu xấu đi.
+1. Đọc dữ liệu lịch sử trả nợ của từng khoản vay theo tháng.
+2. Tại mỗi tháng đánh giá, tính các chỉ báo từ dữ liệu đã có đến thời điểm đó.
+3. Dự báo khách hàng có phát sinh quá hạn theo định nghĩa của nhóm trong 3 tháng tiếp theo hay không.
+4. Chuyển xác suất dự báo thành mức cảnh báo và hiển thị trên Excel.
+Ví dụ dễ hình dung
+Tháng 1 khách hàng trả nợ bình thường. Sang tháng 2, khách hàng bắt đầu trả chậm. Hệ thống sử dụng những gì đã biết đến tháng 2 để dự báo rủi ro trong tháng 3–5, thay vì đợi đến khi khách hàng đã quá hạn nghiêm trọng mới cảnh báo.
+	
+
+________________
+
+
+3. BƯỚC 0 – QUY ƯỚC CHUNG ĐÃ CHỐT CHO CẢ NHÓM
+Cả 6 thành viên dùng chung các quy ước dưới đây. Không tự ý đổi tên khóa, cách tính thời điểm đánh giá hoặc tên các file trao đổi, vì như vậy các phần có thể không ghép được với nhau.
+3.1. Cách hiểu các khái niệm dữ liệu
+Tên
+	Hiểu đơn giản
+	app_id
+	Mã định danh khoản vay.
+	MOB
+	Số tháng kể từ khi khoản vay được giải ngân (Month on Book).
+	snap_date
+	Thời điểm đánh giá rủi ro; tính bằng open_month + MOB.
+	(app_id, mob)
+	Khóa của một dòng trong bảng dữ liệu dạng long: cùng một khoản vay có thể xuất hiện ở nhiều MOB khác nhau.
+	
+
+Ví dụ: một khoản vay có app_id = SH001, open_month = 01/2023. MOB 1 tương ứng tháng đánh giá kế tiếp theo quy ước open_month + MOB; MOB 2 là tháng tiếp theo nữa. Cả nhóm phải dùng cùng một cách tính ngày/tháng.
+3.2. Target chính và target so sánh
+Nội dung
+	Quy ước triển khai
+	Target chính
+	DPD ≥ 30 phát sinh trong 3 tháng sau thời điểm đánh giá (Target_30_3M).
+	Target so sánh
+	DPD ≥ 90 phát sinh trong 3 tháng sau thời điểm đánh giá (Target_90_3M), dùng để so sánh độ nhạy.
+	Target = 1
+	Có phát sinh sự kiện tương ứng trong 3 tháng tương lai.
+	Target = 0
+	Không phát sinh sự kiện tương ứng trong 3 tháng tương lai và quan sát có đủ thời gian theo dõi.
+	Không gán nhãn
+	Không đủ 3 tháng tương lai để xác định kết quả hoặc thuộc trường hợp cần xử lý riêng như tất toán/cắt cụt.
+	
+
+Vì sao chọn 30+ làm target chính?
+EWS cần cảnh báo sớm. Mốc 30+ được dùng làm sự kiện cảnh báo chính; 90+ là target phụ để nhóm so sánh. Không nhầm target 30+ trong 3 tháng với định nghĩa Bad gốc của bộ dữ liệu là 90+ trong 12 tháng đầu.
+	
+
+3.3. Phạm vi snapshot và xử lý nhóm khách hàng
+* Theo mapping sơ bộ trong tài liệu dữ liệu, tập snapshot ban đầu là MOB 3–21: có lịch sử trước thời điểm đánh giá và còn đủ 3 tháng tương lai để tạo nhãn.
+* Không đưa vào dự báo những quan sát đã chạm ngưỡng rủi ro tại thời điểm đánh giá; W3 cần xác định chính xác quy tắc loại khỏi tập risk-at-entry.
+* Giữ nhóm Indeterminate trong EWS vì đây vẫn là khách hàng vay hiện hữu có thể tiếp tục theo dõi.
+* Loại nhóm Excluded theo phạm vi đã phân tích trong tài liệu mapping.
+* W3 phải xử lý riêng khoản vay đã tất toán và các quan sát bị cắt cụt, không tự gán chúng thành Good.
+3.4. Dữ liệu nào sử dụng?
+File
+	Cách sử dụng
+	song_hong_perf_monthly.csv
+	Nguồn chính chứa DPD theo MOB 01–24. Dùng CSV này làm bản chuẩn.
+	song_hong_dev_2023.csv
+	Bổ sung thông tin hồ sơ tại thời điểm xin vay; không có hành vi theo tháng.
+	song_hong_oot_2024H1.csv
+	Dùng cho kiểm định ngoài thời gian (out-of-time).
+	song_hong_bureau_rejects.csv
+	Không dùng để xây dựng Behavioral EWS vì là hồ sơ bị từ chối, không có lịch sử trả nợ.
+	song_hong_applications_2026Q2.csv
+	Không dùng cho mô hình Behavioral EWS hiện tại vì là hồ sơ mới, chưa có lịch sử trả nợ.
+	song_hong_perf_monthly.xlsx
+	Không dùng làm bản chính; đây là bản cũ, thiếu một số trường so với CSV.
+	
+
+3.5. Quy tắc tránh rò rỉ dữ liệu (data leakage)
+Không đưa các trường phản ánh kết quả hoặc thông tin phát sinh sau thời điểm đánh giá vào input của mô hình. Theo tài liệu mapping, cần loại khỏi predictors:
+* perf_class, target, max_dpd_12m, exclusion_reason, indeterminate_reason, decision, curr_max_cic_group và gender.
+* restr_mob chỉ được dùng dưới dạng cờ cho biết khoản vay đã cơ cấu tại hoặc trước thời điểm đánh giá; không dùng thông tin cơ cấu xảy ra trong tương lai.
+* Mọi feature tại tháng t chỉ được tính từ dữ liệu có sẵn tại hoặc trước t. DPD các tháng tương lai chỉ dùng để tạo target và backtesting.
+3.6. Bốn file trao đổi giữa các thành viên
+File
+	Ai tạo?
+	Nội dung
+	panel_target.csv
+	W3
+	Khóa app_id, mob, snap_date và các cột target 30+ / 90+.
+	features.csv
+	W4
+	Các chỉ báo được tính cho từng app_id, mob.
+	coef.csv
+	W5
+	Hệ số mô hình được chọn để Excel tính lại xác suất dự báo.
+	thresholds.csv
+	W6
+	Các ngưỡng PD dùng để chia cấp cảnh báo.
+	
+
+Quy tắc ghép file
+Các bảng trao đổi dùng chung khóa (app_id, mob). Không tự đổi tên cột sau khi đã thống nhất. W5 ghép panel_target.csv với features.csv; W6 dùng xác suất dự báo từ W5 để chọn/áp dụng ngưỡng.
+	
+
+4. HƯỚNG DẪN CHI TIẾT TỪNG THÀNH VIÊN
+Phần này giải thích cụ thể từng người cần làm gì, theo cách dễ hình dung và có thể dùng làm checklist giao việc.
+W1 – DATA MANAGER & WORKBOOK INTEGRATOR
+Vai trò: người nắm cấu trúc dữ liệu và ghép các phần Excel của cả nhóm thành sản phẩm cuối.
+Bạn cần làm:
+1. Mở các file dữ liệu và lập danh sách: mỗi file có bao nhiêu dòng, bao nhiêu cột, cột nào là mã khoản vay, cột nào chứa thời gian và cột nào chứa thông tin khách hàng.
+2. Kiểm tra các file có nối được với nhau bằng app_id hay không; ghi lại trường hợp thiếu hoặc không khớp.
+3. Bổ sung Data Dictionary cho các cột tài liệu chưa giải thích, đặc biệt open_month, mob_observed, close_mob và dpd_01–dpd_24.
+4. Tạo         phần hướng dẫn sử dụng và sheet Raw Data; đến cuối dự án nhận các sheet của thành viên khác để ghép thành một workbook thống nhất.
+Sản phẩm bàn giao:
+* Bảng Data Structure và Variable Mapping; Data Dictionary đã bổ sung.
+* Workbook có 00_Instructions và 01_Raw_Data; file Excel cuối cùng đã ghép đủ sheet.
+Hình dung: W1 giống người quản lý tài liệu và lắp ráp sản phẩm. W1 không phải tự làm hết các phân tích, mà đảm bảo mọi người dùng đúng dữ liệu và cuối cùng ghép được thành một file.
+W2 – DATA QUALITY CONTROLLER
+Vai trò: kiểm tra dữ liệu có thiếu, sai hoặc bất thường không; đưa ra quy tắc xử lý thống nhất.
+Bạn cần làm:
+1. Tính số lượng và tỷ lệ giá trị thiếu của các cột; tìm hiểu nguyên nhân thiếu, không tự động thay mọi giá trị thiếu bằng 0.
+2. Kiểm tra các giá trị bất thường như tuổi không hợp lý, income > 500, DTI > 200 hoặc card utilization > 100.
+3. Kiểm tra sự thay đổi phân phối thu nhập theo thời gian; tài liệu mapping ghi nhận dấu hiệu đứt gãy từ 07/2023.
+4. Chốt quy tắc làm sạch và quy tắc loại biến để tránh data leakage; viết thành code để các thành viên khác dùng thống nhất.
+Sản phẩm bàn giao:
+* Báo cáo Data Quality và danh sách quy tắc xử lý.
+* clean_rules.py và sheet 02_Customer_Profile.
+Hình dung: W2 giống người kiểm tra chất lượng nguyên liệu. Ví dụ, deposit bị thiếu có thể do khách hàng không có tài khoản tiền gửi, chứ không nhất thiết là lỗi dữ liệu.
+W3 – TARGET DEFINITION & LABELING
+Vai trò: xác định “đáp án đúng” để mô hình học và để nhóm kiểm tra dự đoán có chính xác hay không.
+Bạn cần làm:
+1. Chuyển dữ liệu DPD từ dạng wide (mỗi khoản vay một dòng, có dpd_01…dpd_24) sang dạng long (mỗi khoản vay có nhiều dòng theo MOB).
+2. Với từng tháng đánh giá, nhìn vào 3 tháng tiếp theo để xác định có phát sinh DPD 30+ hay 90+ hay không.
+3. Chỉ tạo nhãn cho quan sát đủ 3 tháng tương lai; xử lý riêng khoản vay đã tất toán, đã chạm ngưỡng trước thời điểm đánh giá hoặc bị cắt cụt dữ liệu.
+4. Xuất bảng target để W5 ghép với features của W4; đồng thời chuẩn bị phần backtesting để đối chiếu dự báo với kết quả thực tế.
+Sản phẩm bàn giao:
+* build_panel.py và panel_target.csv.
+* Sheet 07_Backtesting.
+Hình dung: W3 là người tạo đáp án. W3 dùng DPD tương lai để biết khách hàng có thực sự gặp sự kiện rủi ro không; tuyệt đối không đưa DPD tương lai vào input của mô hình.
+W4 – FEATURE ENGINEERING SPECIALIST
+Vai trò: biến dữ liệu DPD thô thành các chỉ báo có ý nghĩa để mô hình nhận ra dấu hiệu khách hàng đang xấu đi.
+Bạn cần làm:
+1. Đọc cách mã hóa DPD và xác định những cửa sổ thời gian được phép dùng tại tháng đánh giá t.
+2. Thiết kế công thức cho các biến như DPD trung bình 3 tháng gần nhất, DPD cao nhất 3 tháng gần nhất, xu hướng DPD, số tháng có quá hạn và số tháng từ lần quá hạn gần nhất.
+3. Có thể bổ sung các biến hồ sơ tĩnh từ dev_2023 nếu chúng có sẵn tại thời điểm xin vay và được W2 xác nhận hợp lệ.
+4. Tính feature cho từng (app_id, mob), xuất file để W5 ghép với target.
+Sản phẩm bàn giao:
+* Bảng mô tả tên biến, ý nghĩa và công thức.
+* features.py, features.csv và sheet 03_Risk_Indicators.
+Giới hạn dữ liệu cần nhớ
+Bộ dữ liệu không có Revenue, Outstanding Balance hoặc Credit Limit theo tháng. Vì vậy không xây dựng các chỉ báo tăng trưởng doanh thu hay mức sử dụng hạn mức theo tháng. Trọng tâm feature là lịch sử DPD và các biến hồ sơ tĩnh có sẵn.
+	
+
+Hình dung: W4 là người biến nguyên liệu thô thành thông tin có ích. W3 tạo đáp án; W4 tạo những manh mối để mô hình dự báo.
+W5 – MACHINE LEARNING & MODEL DEVELOPER
+Vai trò: huấn luyện mô hình để máy tính học mối liên hệ giữa các chỉ báo và sự kiện rủi ro trong 3 tháng tới.
+Bạn cần làm:
+1. Ghép panel_target.csv của W3 và features.csv của W4 bằng khóa (app_id, mob); áp dụng quy tắc làm sạch đã thống nhất với W2.
+2. Tạo bộ dữ liệu mô hình gồm khóa, thời điểm đánh giá, biến đầu vào và target.
+3. Chia dữ liệu theo thời gian: dùng Dev để phát triển mô hình và OOT để kiểm định trên giai đoạn thời gian mới hơn.
+4. Huấn luyện và so sánh Logistic Regression (LR), Decision Tree (DT) và Random Forest (RF); chọn mô hình phù hợp.
+5. Xuất hệ số của mô hình được chọn để Excel có thể tính PD theo cùng cách với Python.
+Sản phẩm bàn giao:
+* train_model.py, báo cáo so sánh mô hình và mô hình được lựa chọn.
+* coef.csv và sheet 04_Model_Scoring.
+Hình dung: W5 là người huấn luyện AI. W5 dạy máy tính cách nhận diện các dấu hiệu rủi ro và chuyển kết quả thành xác suất dự báo (PD).
+
+
+W6 – RISK CLASSIFICATION & DASHBOARD DEVELOPER
+Vai trò: biến xác suất do W5 tạo ra thành cấp cảnh báo dễ hiểu và thiết kế giao diện theo dõi.
+Bạn cần làm:
+1. Xác định các ngưỡng PD để chia khách hàng thành Green, Yellow, Orange và Red. Ngưỡng cần dựa trên kết quả mô hình và khả năng xử lý cảnh báo, không tự chọn tùy ý.
+2. Tạo Reason Codes: giải thích vì sao khách hàng bị cảnh báo, ví dụ DPD tăng hoặc nhiều tháng có quá hạn.
+3. Tạo dashboard tổng hợp số lượng khách hàng theo từng mức cảnh báo và các KPI theo dõi.
+4. Khi chưa có PD thật từ W5, có thể làm trước với file scored.csv chứa PD giả; sau đó thay bằng kết quả thật.
+Sản phẩm bàn giao:
+* thresholds.py và thresholds.csv.
+* Sheet 05_EWS_Alerts và 06_Dashboard.
+Hình dung: W6 là người thiết kế bảng điều khiển. Người dùng không cần đọc hết số liệu kỹ thuật mà có thể nhanh chóng biết khách hàng nào cần được chú ý.
+5. CÁCH 6 THÀNH VIÊN PHỐI HỢP – AI CÓ PHẢI ĐỢI AI?
+Không cần lần lượt chờ từng người làm xong. Sau Bước 0, W1, W2, W3 và W4 có thể bắt đầu song song. Chỉ có một số điểm bàn giao giữa các phần.
+Điểm bàn giao
+	Cần kết quả từ ai?
+	Cách làm để không bị chờ
+	W5 bắt đầu train
+	W3 (target) và W4 (features)
+	W3 xuất bản target v0 sớm; W5 dùng dữ liệu giả cùng cấu trúc để viết khung code trước.
+	W6 chọn ngưỡng PD
+	W5 (PD dự báo)
+	W6 viết code và dựng Excel với PD giả; khi W5 có kết quả thật thì thay file.
+	Excel tính PD
+	W5 (coef.csv)
+	Dựng sheet với hệ số mẫu đúng cấu trúc; thay bằng hệ số thật ở bước tích hợp cuối.
+	Ghép workbook cuối
+	Các thành viên còn lại
+	W1 nhận các sheet, kiểm tra tên cột và ghép workbook; cả nhóm chạy thử một tháng dữ liệu từ đầu đến cuối.
+	
+
+Nguyên tắc làm việc
+W3 và W4 làm độc lập nhưng phải dùng cùng khóa (app_id, mob). W5 cần kết quả của hai người này để train. W6 có thể làm giao diện trước bằng dữ liệu giả. W1 tích hợp ở cuối.
+	
+
+6. SẢN PHẨM CUỐI CÙNG CỦA NHÓM
+Sản phẩm
+	Nội dung
+	Python source code
+	Các module: clean_rules.py, build_panel.py, features.py, train_model.py, thresholds.py và phần kiểm tra/ghép dữ liệu của W1.
+	EWS_Excel.xlsx
+	Workbook có các sheet 00–07 để đọc dữ liệu, tính chỉ báo, tính PD, hiển thị cảnh báo và backtesting.
+	Model evaluation / Backtesting report
+	Tóm tắt cách tạo target, dữ liệu train/OOT, mô hình được chọn và kết quả đối chiếu dự báo với thực tế.
+	
+
+7. CHECKLIST BẮT ĐẦU CHO TỪNG NGƯỜI
+Có thể dùng danh sách này để tự theo dõi tiến độ. Đánh dấu khi đã hoàn thành từng đầu việc.
+W1
+☐  Kiểm tra cấu trúc các file và khóa app_id
+☐  Bổ sung Data Dictionary
+☐  Tạo Instructions và Raw Data; chuẩn bị ghép workbook
+W2
+☐  Kiểm tra missing values
+☐  Phân tích outliers và drift
+☐  Hoàn thiện clean_rules.py
+W3
+☐  Chuyển wide sang long
+☐  Tạo target 30+ và 90+ trong 3 tháng
+☐  Xử lý tất toán và quan sát bị cắt cụt
+W4
+☐  Chốt công thức Risk Indicators
+☐  Tạo features.csv
+☐  Hoàn thiện features.py và sheet 03
+W5
+☐  Ghép target với features
+☐  Train và so sánh LR, DT, RF
+☐  Xuất coef.csv và kết quả kiểm định
+W6
+☐  Chọn ngưỡng cảnh báo
+☐  Tạo Reason Codes
+☐  Hoàn thiện Alerts và Dashboard
+8. LƯU Ý CHUNG TRƯỚC KHI BẮT ĐẦU
+* Đây là Behavioral EWS cho khách hàng/khoản vay hiện hữu, không phải mô hình xét duyệt hồ sơ mới.
+* Dữ liệu hành vi theo tháng chủ yếu nằm ở perf_monthly.csv; dev_2023 chỉ bổ sung thông tin hồ sơ tại thời điểm xin vay.
+* Excel chỉ nạp snapshot của tháng cần theo dõi; việc huấn luyện trên tập dữ liệu lớn được thực hiện bằng Python.
+* Trong tài liệu mapping, bảng snapshot có thể lên khoảng 854 nghìn dòng; không cần đưa toàn bộ bảng dài này vào Excel để huấn luyện.
+* Bộ dữ liệu có giới hạn: không có doanh thu, dư nợ và hạn mức tín dụng theo tháng. Nhóm nên thông báo rõ giới hạn này với giảng viên và tập trung vào chỉ báo DPD.
+Cách làm hiệu quả nhất
+Mỗi thành viên hãy viết rõ ý nghĩa và công thức nghiệp vụ của phần mình trước, sau đó mới code. Khi thuyết trình, mỗi người sẽ giải thích được vì sao mình tạo biến hoặc quy tắc đó, thay vì chỉ trình bày một đoạn code chạy được.
+	
+
+Hướng dẫn phân công nhóm 6 thành viên  •  Trang
